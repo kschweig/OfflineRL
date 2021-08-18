@@ -1,0 +1,30 @@
+name: offline_rl
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - pandas
+  - numpy
+  - scipy
+  - scikit-learn
+  - tqdm
+  - matplotlib
+  - seaborn
+  - pytorch=1.8.1
+  - torchvision
+  - torchaudio
+  - cudatoolkit=10.1
+  - tensorflow=2.4.1
+  - jupyter
+  - pip:
+      - tensorboard
+      - hyperloglog
+      - gym
+      - gym-minigrid
+      - pygame
+      - git+https://github.com/ntasfi/PyGame-Learning-Environment.git
+      - git+https://github.com/kenjyoung/MinAtar.git
+      - git+https://github.com/kschweig/gym-games.git
