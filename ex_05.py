@@ -35,18 +35,19 @@ def create_ds(args):
                  run=args, seed=seed)
 
 def train(args):
-    use_run, run = args
+    use_run, run, dataset = args
 
     for a, agent in enumerate(agent_types):
         for bt in range(len(buffer_types)):
+            if 0 < dataset != bt:
+                continue
+
             train_offline(experiment=experiment, envid=env, agent_type=agent, buffer_type=buffer_types[bt],
                           discount=discount, transitions=transitions_offline, batch_size=batch_size, lr=lr[a],
                           use_run=use_run, run=run, seed=seed+run, use_remaining_reward=(agent == "MCE"))
 
 def assess_env(args):
     use_run = args
-
-    # os.makedirs(os.path.join("results", "ds_eval", f"run_{use_run}"), exist_ok=True)
 
     with open(os.path.join("data", f"ex{experiment}", f"{env}_run{use_run}_er.pkl"), "rb") as f:
         buffer = pickle.load(f)
@@ -95,10 +96,12 @@ if __name__ == '__main__':
 
     parser.add_argument("--online", action="store_true")  # run online task
     parser.add_argument("--run", default=1, type=int)  # which index for the dataset creation run is used in offline?
+    parser.add_argument("--dataset", default=-1, type=int) # which dataset to use
     args = parser.parse_args()
 
     multiple_useruns = 5
     assert 1 <= args.run <= multiple_useruns, f"Create {multiple_useruns} datasets!"
+    assert args.dataset < 5, "dataset must be within the created ones or negative for all!"
 
     if args.online:
         with Pool(multiple_runs, maxtasksperchild=1) as p:
@@ -106,5 +109,4 @@ if __name__ == '__main__':
             p.map(assess_env, range(1, multiple_useruns + 1))
     else:
         with Pool(multiple_runs, maxtasksperchild=1) as p:
-            p.map(train, zip([args.run] * 5, range(1, multiple_runs + 1)))
-
+            p.map(train, zip([args.run] * 5, range(1, multiple_runs + 1), [args.dataset]*5))
