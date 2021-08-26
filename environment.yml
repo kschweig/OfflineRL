@@ -16,9 +16,7 @@ dependencies:
   - pytorch=1.8.1
   - torchvision
   - torchaudio
-  - cudatoolkit=10.1
-  - tensorflow=2.4.1
-  - jupyter
+  - cudatoolkit=11
   - pip:
       - tensorboard
       - hyperloglog
