@@ -6,8 +6,10 @@ def evaluate(env, agent, writer, all_rewards):
     rewards, values, values_std, action_values, entropies, qval_delta = [], [], [], [], [], []
 
     # execute 100 episodes and average over return
-    for _ in range(100):
+    for seed in range(10):
         done, ep_reward = False, []
+
+        env.seed(seed)
         state = env.reset()
 
         while not done:
@@ -28,6 +30,7 @@ def evaluate(env, agent, writer, all_rewards):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         writer.add_scalar("eval/Reward", np.nanmean(rewards), len(all_rewards))
+        writer.add_scalar("eval/Reward (SMA-10)", np.nanmean(all_rewards[-10:]), len(all_rewards))
         writer.add_scalar("eval/Max-Action-Value (mean)", np.nanmean(action_values), len(all_rewards))
         writer.add_scalar("eval/Max-Action-Value (std)", np.nanstd(action_values), len(all_rewards))
         writer.add_scalar("eval/Values", np.nanmean(values), len(all_rewards))

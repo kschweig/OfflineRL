@@ -3,7 +3,7 @@ import gym
 import gym_minigrid
 import gym_minatar
 from gym_minigrid.wrappers import FullyObsWrapper
-from .wrappers import FlatImgObsWrapper, RestrictMiniGridActionWrapper, MinAtarObsWrapper, RestrictMinAtarActionWraper
+from .wrappers import FlatImgObsWrapper, RestrictMiniGridActionWrapper, MinAtarObsWrapper
 from ..agents.dqn import DQN
 from ..agents.rem import REM
 from ..agents.qrdqn import QRDQN

@@ -21,6 +21,7 @@ experiment = 1
 seed = 42
 # hyperparameters for online training
 behavioral = "DQN"
+buffer_size = 50000
 transitions_online = 100000
 # hyperparameters for offline training
 transitions_offline = 5 * transitions_online
@@ -30,7 +31,7 @@ lr = [1e-4] * len(agent_types)
 
 def create_ds(args):
     train_online(experiment=experiment, agent_type=behavioral, discount=discount, envid=env,
-                 transitions=transitions_online, buffer_size=50000,
+                 transitions=transitions_online, buffer_size=buffer_size,
                  run=args, seed=seed)
 
 def train(args):

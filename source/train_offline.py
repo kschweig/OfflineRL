@@ -15,8 +15,7 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
                   use_progression=False, buffer_size=None,
                   use_remaining_reward=False):
     # over how many episodes do we take average and how much gradient updates to next
-    mean_over = 100
-    evaluate_every = 100
+    evaluate_every = transitions // 1000 // 5
 
     env = make_env(envid)
     obs_space = len(env.observation_space.high)
@@ -65,9 +64,9 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
 
     # save returns of offline training
     os.makedirs(os.path.join("results", "raw", f"ex{experiment}"), exist_ok=True)
-    with open(os.path.join("results", "raw", f"ex{experiment}", f"{envid}_userun{use_run}_run{run}_{buffer_type}.csv"), "wb") as f:
+    with open(os.path.join("results", "raw", f"ex{experiment}", f"{envid}_userun{use_run}_run{run}_{buffer_type}.csv"),
+              "w") as f:
         for r in all_rewards:
-            f.write(r)
-            f.write("\n")
+            f.write(f"{r}\n")
 
     return agent

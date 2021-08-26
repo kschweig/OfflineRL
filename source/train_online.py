@@ -19,7 +19,7 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
     # keep training parameters for online training fixed, the experiment does not interfere here.
     batch_size = 32
     lr = 1e-4
-    evaluate_every = 100
+    evaluate_every = transitions // 1000
     train_every = 1
     train_start_iter = batch_size
 
@@ -60,7 +60,7 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", category=RuntimeWarning)
-                    writer.add_scalar("train/Reward (SMA)", np.mean(ep_rewards[-100:]), ep)
+                    writer.add_scalar("train/Reward (SMA-10)", np.mean(ep_rewards[-10:]), ep)
                     writer.add_scalar("train/Reward", ep_reward, ep)
                     writer.add_scalar("train/Max-Action-Value (mean)", np.nanmean(action_values), ep)
                     writer.add_scalar("train/Max-Action-Value (std)", np.nanstd(action_values), ep)
@@ -114,10 +114,9 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
 
     # save returns of online training
     os.makedirs(os.path.join("results", "raw", f"ex{experiment}"), exist_ok=True)
-    with open(os.path.join("results", "raw", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "wb") as f:
+    with open(os.path.join("results", "raw", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "w") as f:
         for r in all_rewards:
-            f.write(r)
-            f.write("\n")
+            f.write(f"{r}\n")
 
     #####################################
     # generate transitions from trained agent
