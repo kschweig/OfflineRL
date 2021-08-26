@@ -19,7 +19,7 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
     # keep training parameters for online training fixed, the experiment does not interfere here.
     batch_size = 32
     lr = 1e-4
-    evaluate_every = transitions // 1000
+    evaluate_every = transitions // 500
     train_every = 1
     train_start_iter = batch_size
 
@@ -45,7 +45,7 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-    ep_rewards, all_rewards = [], []
+    ep_rewards, all_rewards, all_avds = [], [], []
     done = True
     ep = 0
 
@@ -103,7 +103,7 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
 
         # test agent on environment if executed greedily
         if (iteration + 1) % evaluate_every == 0:
-            all_rewards = evaluate(eval_env, agent, writer, all_rewards)
+            all_rewards, all_avds = evaluate(eval_env, agent, writer, all_rewards, all_avds)
 
     # save ER-buffer for offline training
     os.makedirs(os.path.join("data", f"ex{experiment}"), exist_ok=True)
@@ -113,10 +113,16 @@ def train_online(experiment, agent_type="DQN", discount=0.95, envid='CartPole-v1
     del er_buffer
 
     # save returns of online training
-    os.makedirs(os.path.join("results", "raw", f"ex{experiment}"), exist_ok=True)
-    with open(os.path.join("results", "raw", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "w") as f:
+    os.makedirs(os.path.join("results", "raw", "return", f"ex{experiment}"), exist_ok=True)
+    with open(os.path.join("results", "raw", "return", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "w") as f:
         for r in all_rewards:
             f.write(f"{r}\n")
+
+    # save avds of online training
+    os.makedirs(os.path.join("results", "raw", "avd", f"ex{experiment}"), exist_ok=True)
+    with open(os.path.join("results", "raw", "avd", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "w") as f:
+        for avd in all_avds:
+            f.write(f"{avd}\n")
 
     #####################################
     # generate transitions from trained agent

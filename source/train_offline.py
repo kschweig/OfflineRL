@@ -15,7 +15,7 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
                   use_progression=False, buffer_size=None,
                   use_remaining_reward=False):
     # over how many episodes do we take average and how much gradient updates to next
-    evaluate_every = transitions // 1000 // 5
+    evaluate_every = transitions // 500 // 5
 
     env = make_env(envid)
     obs_space = len(env.observation_space.high)
@@ -46,7 +46,7 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
     writer = SummaryWriter(
         log_dir=os.path.join("runs", f"ex{experiment}", f"{envid}", f"{buffer_type}", f"{agent_type}", f"run{run}"))
 
-    all_rewards = []
+    all_rewards, all_avds = [], []
 
     for iter in tqdm(range(transitions), desc=f"{agent_type} ({envid}) {buffer_type}, run {run}"):
         if use_progression:
@@ -59,14 +59,19 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
         agent.train(buffer, writer, maximum, minimum)
 
         if (iter + 1) % evaluate_every == 0:
-            all_rewards = evaluate(env, agent, writer, all_rewards)
+            all_rewards, all_avds = evaluate(env, agent, writer, all_rewards, all_avds)
 
-
-    # save returns of offline training
-    os.makedirs(os.path.join("results", "raw", f"ex{experiment}"), exist_ok=True)
-    with open(os.path.join("results", "raw", f"ex{experiment}", f"{envid}_userun{use_run}_run{run}_{buffer_type}.csv"),
+    # save returns of online training
+    os.makedirs(os.path.join("results", "raw", "return", f"ex{experiment}"), exist_ok=True)
+    with open(os.path.join("results", "raw", "return", f"ex{experiment}", f"{envid}_online_run{run}.csv"),
               "w") as f:
         for r in all_rewards:
             f.write(f"{r}\n")
+
+    # save avds of online training
+    os.makedirs(os.path.join("results", "raw", "avd", f"ex{experiment}"), exist_ok=True)
+    with open(os.path.join("results", "raw", "avd", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "w") as f:
+        for avd in all_avds:
+            f.write(f"{avd}\n")
 
     return agent

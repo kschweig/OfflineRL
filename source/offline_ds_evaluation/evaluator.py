@@ -78,20 +78,21 @@ class Evaluator:
         unique_states = self.get_unique_states(limits=state_limits)
         unique_state_actions = self.get_unique_state_actions(limits=action_limits)
 
-        print("-"*50)
-        print("Min / Mean / Max Return: \t\t", f"{round(np.min(returns), 2)} / {round(np.mean(returns), 2)} "
-                                             f"/ {round(np.max(returns), 2)}")
-        print("Unique States: \t", f"{unique_states}")
-        print("Unique State-Actions: \t", f"{unique_state_actions}")
-        print("Min / Mean / Max Entropy: \t", f"{round(np.min(entropies), 2)} / {round(np.mean(entropies), 2)} "
-                                              f"/ {round(np.max(entropies), 2)}")
-        print("Min / Mean / Max Sparsity: \t", f"{round(np.min(sparsities), 2)} / "
-                                               f"{round(np.mean(sparsities), 2)} "
-                                               f"/ {round(np.max(sparsities), 2)}")
-        print("Min / Mean / Max Episode Length: \t", f"{round(np.min(ep_lengths), 2)} / "
-                                                     f"{round(np.mean(ep_lengths), 2)} "
-                                                     f"/ {round(np.max(ep_lengths), 2)}")
-        print("-" * 50)
+        if verbose:
+            print("-"*50)
+            print("Min / Mean / Max Return: \t\t", f"{round(np.min(returns), 2)} / {round(np.mean(returns), 2)} "
+                                                 f"/ {round(np.max(returns), 2)}")
+            print("Unique States: \t", f"{unique_states}")
+            print("Unique State-Actions: \t", f"{unique_state_actions}")
+            print("Min / Mean / Max Entropy: \t", f"{round(np.min(entropies), 2)} / {round(np.mean(entropies), 2)} "
+                                                  f"/ {round(np.max(entropies), 2)}")
+            print("Min / Mean / Max Sparsity: \t", f"{round(np.min(sparsities), 2)} / "
+                                                   f"{round(np.mean(sparsities), 2)} "
+                                                   f"/ {round(np.max(sparsities), 2)}")
+            print("Min / Mean / Max Episode Length: \t", f"{round(np.min(ep_lengths), 2)} / "
+                                                         f"{round(np.mean(ep_lengths), 2)} "
+                                                         f"/ {round(np.max(ep_lengths), 2)}")
+            print("-" * 50)
 
         return returns, unique_states, unique_state_actions, entropies, sparsities, ep_lengths
 

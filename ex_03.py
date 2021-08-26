@@ -7,6 +7,7 @@ import os
 import copy
 import pickle
 import numpy as np
+import argparse
 
 
 # project parameters
@@ -15,7 +16,6 @@ discount = 0.95
 buffer_types = ["random", "mixed", "er", "noisy", "fully"]
 agent_types = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 multiple_runs = 5
-multiple_useruns = 5
 # experiment parameters
 experiment = 3
 seed = 42
@@ -91,11 +91,20 @@ def assess_env(args):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
 
-    with Pool(multiple_useruns, maxtasksperchild=1) as p:
-        p.map(create_ds, range(1, multiple_useruns + 1))
-    with Pool(multiple_useruns * multiple_runs, maxtasksperchild=1) as p:
-        p.map(train, zip(range(1, multiple_useruns + 1), range(1, multiple_runs + 1)))
-    with Pool(multiple_useruns, maxtasksperchild=1) as p:
-        p.map(assess_env, range(1, multiple_useruns + 1))
+    parser.add_argument("--online", action="store_true")  # run online task
+    parser.add_argument("--run", default=1, type=int)  # which index for the dataset creation run is used in offline?
+    args = parser.parse_args()
+
+    multiple_useruns = 5
+    assert 1 <= args.run <= multiple_useruns, f"Create {multiple_useruns} datasets!"
+
+    if args.online:
+        with Pool(multiple_runs, maxtasksperchild=1) as p:
+            p.map(create_ds, range(1, multiple_useruns + 1))
+            p.map(assess_env, range(1, multiple_useruns + 1))
+    else:
+        with Pool(multiple_runs, maxtasksperchild=1) as p:
+            p.map(train, zip([args.run] * 5, range(1, multiple_runs + 1)))
 

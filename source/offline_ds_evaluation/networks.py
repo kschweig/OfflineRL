@@ -23,7 +23,9 @@ class BaseNet(nn.Module, ABC):
         )
 
         for param in self.parameters():
-            if len(param.shape) == 2:
+            if len(param.shape) == 1:
+                torch.nn.init.constant_(param, 0)
+            if len(param.shape) >= 2:
                 torch.nn.init.kaiming_normal_(param, mode='fan_in', nonlinearity='linear')
 
     def forward(self, state):
@@ -41,7 +43,9 @@ class BC(BaseNet):
         self.out = nn.Linear(in_features=self.num_hidden, out_features=num_actions)
 
         for param in self.out.parameters():
-            if len(param.shape) > 1:
+            if len(param.shape) == 1:
+                torch.nn.init.constant_(param, 0)
+            if len(param.shape) >= 2:
                 torch.nn.init.kaiming_normal_(param, mode='fan_in', nonlinearity='linear')
 
     def forward(self, state):
