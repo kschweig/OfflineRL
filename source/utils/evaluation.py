@@ -5,8 +5,8 @@ import warnings
 def evaluate(env, agent, writer, all_rewards, all_avds):
     rewards, entropies, qval_deltas = [], [], []
 
-    # execute 100 episodes and average over return
-    for seed in range(100):
+    # execute 10 episodes and average over return
+    for seed in range(10):
         done, ep_reward, values, action_values = False, [], [], []
 
         env.seed(seed)

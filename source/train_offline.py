@@ -15,7 +15,7 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
                   use_progression=False, buffer_size=None,
                   use_remaining_reward=False):
     # over how many episodes do we take average and how much gradient updates to next
-    evaluate_every = transitions // 500 // 5
+    evaluate_every = transitions // 500
 
     env = make_env(envid)
     obs_space = len(env.observation_space.high)
