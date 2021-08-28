@@ -11,13 +11,13 @@ import argparse
 
 
 # project parameters
-env = "SpaceInvaders-MinAtar-v0"
+env = "Breakout-MinAtar-v0"
 discount = 0.99
 buffer_types = ["random", "mixed", "er", "noisy", "fully"]
-agent_types = ["BC", "BVE", "MCE", "DQN", "QRDQN"]
+agent_types = ["REM", "BCQ", "CQL", "CRR"]
 multiple_runs = 5
 # experiment parameters
-experiment = 6
+experiment = 5
 seed = 42
 # hyperparameters for online training
 behavioral = "DQN"

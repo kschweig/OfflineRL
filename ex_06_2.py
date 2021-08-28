@@ -14,7 +14,7 @@ import argparse
 env = "SpaceInvaders-MinAtar-v0"
 discount = 0.99
 buffer_types = ["random", "mixed", "er", "noisy", "fully"]
-agent_types = ["BC", "BVE", "MCE", "DQN", "QRDQN"]
+agent_types = ["REM", "BCQ", "CQL", "CRR"]
 multiple_runs = 5
 # experiment parameters
 experiment = 6
