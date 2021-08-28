@@ -63,14 +63,14 @@ def train_offline(experiment, envid, agent_type="DQN", buffer_type="er", discoun
 
     # save returns of online training
     os.makedirs(os.path.join("results", "raw", "return", f"ex{experiment}"), exist_ok=True)
-    with open(os.path.join("results", "raw", "return", f"ex{experiment}", f"{envid}_online_run{run}.csv"),
+    with open(os.path.join("results", "raw", "return", f"ex{experiment}", f"{envid}_{agent_type}_{buffer_type}_run{run}.csv"),
               "w") as f:
         for r in all_rewards:
             f.write(f"{r}\n")
 
     # save avds of online training
     os.makedirs(os.path.join("results", "raw", "avd", f"ex{experiment}"), exist_ok=True)
-    with open(os.path.join("results", "raw", "avd", f"ex{experiment}", f"{envid}_online_run{run}.csv"), "w") as f:
+    with open(os.path.join("results", "raw", "avd", f"ex{experiment}", f"{envid}_{agent_type}_{buffer_type}_run{run}.csv"), "w") as f:
         for avd in all_avds:
             f.write(f"{avd}\n")
 
