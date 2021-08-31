@@ -15,7 +15,7 @@ env = "MountainCar-v0"
 discount = 0.99
 buffer_types = ["random", "mixed", "er", "noisy", "fully"]
 agent_types = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
-multiple_runs = 5
+multiple_useruns = 5
 # experiment parameters
 experiment = 2
 seed = 42
@@ -94,18 +94,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--online", action="store_true")  # run online task
-    parser.add_argument("--run", default=1, type=int)  # which index for the dataset creation run is used in offline?
+    parser.add_argument("--run", default=1, type=int)  # which number of run for dataset?
     parser.add_argument("--dataset", default=-1, type=int) # which dataset to use
     args = parser.parse_args()
 
-    multiple_useruns = 5
-    assert 1 <= args.run <= multiple_useruns, f"Create {multiple_useruns} datasets!"
     assert args.dataset < 5, "dataset must be within the created ones or negative for all!"
 
     if args.online:
-        with Pool(multiple_runs, maxtasksperchild=1) as p:
+        with Pool(multiple_useruns, maxtasksperchild=1) as p:
             p.map(create_ds, range(1, multiple_useruns + 1))
             p.map(assess_env, range(1, multiple_useruns + 1))
     else:
-        with Pool(multiple_runs, maxtasksperchild=1) as p:
-            p.map(train, zip([args.run] * 5, range(1, multiple_runs + 1), [args.dataset]*5))
+        with Pool(multiple_useruns, maxtasksperchild=1) as p:
+            p.map(train, zip(range(1, multiple_useruns + 1), [args.run] * 5, [args.dataset]*5))
