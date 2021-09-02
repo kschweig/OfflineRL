@@ -56,9 +56,6 @@ algos = algolist[run]
 buffer = {"random": "Random Policy", "mixed": "Mixed Policy", "er": "Experience Replay",
           "noisy": "Noisy Policy", "fully": "Final Policy"}
 
-y_bounds = {'CartPole-v1': (-15, 15), "MiniGrid-LavaGapS7-v0":(-0.5, 1.3), 'MountainCar-v0': (-50, 100),
-            "MiniGrid-Dynamic-Obstacles-8x8-v0":(-1, 1), 'Breakout-MinAtar-v0': (-5, 25), "Space_invaders-MinAtar-v0": (-5, 25)}
-
 metrics = {(0,0):"Return (dataset)", (0,1):"Return (std)",
            1:"Unique States", 2:"Unique State-Action Pairs",
            (3,0):"Entropy", (3,1):"Entropy (std)",

@@ -2,3 +2,5 @@
 /data/
 /results/raw
 /results/csv
+/results/csv_per_userun
+/results/learning/

@@ -39,7 +39,7 @@ def train(args):
 
     for a, agent in enumerate(agent_types):
         for bt in range(len(buffer_types)):
-            if 0 < dataset != bt:
+            if 0 <= dataset != bt:
                 continue
 
             train_offline(experiment=experiment, envid=env, agent_type=agent, buffer_type=buffer_types[bt],
