@@ -15,10 +15,9 @@ sns.set()
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
-run = 4
-
-folder = ["baselines", "offpolicy", "offline", "all", "presentation"][run]
+folder="main_figures"
 image_type = "png"
+
 figsize = (12, 6)
 figsize_legend = (12, 1)
 figsize_half = (12, 3.5)
@@ -29,29 +28,27 @@ figsize_envs = (12, 7.2)
 figsize_theplot = (12, 12)
 
 # metric manager
-experiments = ["ex4", "ex5", "ex6"]
+experiments = ["ex1", "ex2", "ex3", "ex4", "ex5", "ex6"]
 
 mm = MetricsManager(0)
 
 
 for ex in experiments:
-    paths = glob.glob(os.path.join("..", "..", "data", ex, "metrics*.pkl"))
-    for path in paths:
-        with open(path, "rb") as f:
-            m = pickle.load(f)
-        mm.data.update(m.data)
+    for userun in range(1, 6):
+        paths = glob.glob(os.path.join("..", "..", "data", ex, f"metrics_*_run{userun}.pkl"))
+        for path in paths:
+            with open(path, "rb") as f:
+                m = pickle.load(f)
+                m.recode(userun)
+            mm.data.update(m.data)
+            print(mm.data)
 
 # static stuff
 
 envs = {'CartPole-v1': 0, 'MountainCar-v0': 1, "MiniGrid-LavaGapS7-v0": 2, "MiniGrid-Dynamic-Obstacles-8x8-v0": 3,
         'Breakout-MinAtar-v0': 4, "Space_invaders-MinAtar-v0": 5}
 
-algolist = [["BC", "BVE", "MCE"],
-            ["DQN", "QRDQN", "REM"],
-            ["BCQ", "CQL", "CRR"],
-            ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"],
-            ["BC", "BVE", "DQN", "BCQ"]]
-algos = algolist[run]
+algos = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 
 buffer = {"random": "Random Policy", "mixed": "Mixed Policy", "er": "Experience Replay",
           "noisy": "Noisy Policy", "fully": "Final Policy"}
@@ -80,92 +77,6 @@ def plt_csv(ax, csv, algo, mode, ylims=None, set_title=True, color=None, set_lab
         ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
 
-####################################
-#       Usual Return plots         #
-####################################
-
-mark = "return"
-
-# titles
-y_label = "Moving Average Return"
-x_label = "Update Steps"
-
-indir = os.path.join("..", "..", "results", "csv", mark)
-outdir = os.path.join("..", "..", "results", folder, mark)
-os.makedirs(outdir, exist_ok=True)
-
-files = []
-for file in glob.glob(os.path.join(indir, "*.csv")):
-    files.append(file)
-
-data = dict()
-
-for file in files:
-    name = file.split("/")[-1]
-    env = "_".join(name.split("_")[:-2])
-    mode = name.split("_")[-2]
-    algo = name.split("_")[-1].split(".")[0]
-
-    try:
-        csv = np.loadtxt(file, delimiter=";")
-    except:
-        print("Error in ", env, mode, algo)
-
-    if len(csv.shape) == 1:
-        csv = csv.reshape(-1, 1)
-
-    if not data.keys() or env not in data.keys():
-        data[env] = dict()
-    if not data[env].keys() or mode not in data[env].keys():
-        data[env][mode] = dict()
-
-    data[env][mode][algo] = csv
-
-for e, env in enumerate(data.keys()):
-
-    f, axs = plt.subplots(1, 5, figsize=figsize_small, sharex=True, sharey=True)
-    #axs = [item for sublist in axs for item in sublist]
-
-    for m, mode in enumerate(data[env].keys()):
-
-        if mode == "online":
-            continue
-
-        ids = list(buffer.keys())
-        ax = axs[ids.index(mode)]
-
-        norm = mm.get_data(env, mode)[0][0]
-        ax.axhline(y=norm, color="black", linestyle="dotted",
-                   linewidth=2, label=("Behav." if m==0 else None))
-                   
-        csv = data[env]["online"]["DQN"]
-        ax.axhline(y=csv.max(), color="black", linewidth=2)
-        plt_csv(ax, csv, "Online", mode, color="black", set_label=m==0)
-
-        for a, algo in enumerate(algos):
-            csv = data[env][mode][algo]
-            plt_csv(ax, csv, algo, mode, color=f"C{(a + run * 3 if run < 3 else a)}", set_label=m==0)
-
-    for ax in axs[m:]:
-        f.delaxes(ax)
-
-    f.text(0.52, 0.92, "-".join(env.split("-")[:-1]), ha='center', fontsize="x-large")
-    #f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
-    f.tight_layout(rect=(0.008, 0.022, 1, 0.92))
-    f.text(0.52, 0.02, x_label, ha='center', fontsize="large")
-    f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-    plt.savefig(os.path.join(outdir, env + "." + "png"))
-
-    if e == 0:
-        for ax in axs:
-            ax.set_visible(False)
-        for text in f.texts:
-            text.set_visible(False)
-        f.set_size_inches(figsize_small[0] - 4, 0.4, forward=True)
-        f.legend(loc="center", ncol=len(algos) + 2, fontsize="small")
-        f.tight_layout()
-        plt.savefig(os.path.join(outdir, "legend." + image_type))
-    plt.close()
 
 ###############
 # plot metrics for policies
@@ -308,8 +219,8 @@ plt.close()
 ##################
 # load reward data
 ##################
-indir = os.path.join("..", "..", "results", "csv", "return")
-outdir = os.path.join("..", "..", "results", folder, "comp_return")
+indir = os.path.join("..", "..", "results", "csv_for_userun", "return")
+outdir = os.path.join("..", "..", "results", folder, "comp_return", f"userun{userun}")
 os.makedirs(outdir, exist_ok=True)
 
 files = []
@@ -374,8 +285,8 @@ for metric in metrics.keys():
             x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
 
             cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
-            ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{(a + run * 3 if run < 3 else a)}")
-            ax.plot(x, y, "o-", label=(algo if e == 1 else None), color=f"C{(a + run * 3 if run < 3 else a)}")
+            ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
+            ax.plot(x, y, "o-", label=(algo if e == 1 else None), color=f"C{a}")
 
         x, y = [], []
         for mode in modes:
@@ -464,8 +375,8 @@ for e, env in enumerate(envs):
         x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
 
         cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
-        ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{(a + run * 3 if run < 3 else a)}")
-        ax.plot(x, y, "o-", label=(algo if e == 0 else None), color=f"C{(a + run * 3 if run < 3 else a)}")
+        ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
+        ax.plot(x, y, "o-", label=(algo if e == 0 else None), color=f"C{a}")
 
     x = []
     for m, mode in enumerate(modes):
@@ -557,23 +468,11 @@ y_label = r"Relative $\bf{Trajectory \; Quality}$ to Online Policy"
 
 # plot for discussion
 
-sizes = [(1, 3), (1, 3), (1, 3), (3, 3), (2, 2)]
-
-figsizes = [(figsize_theplot[0] / 3, figsize_theplot[1]),
-            (figsize_theplot[0] / 3, figsize_theplot[1]),
-            (figsize_theplot[0] / 3, figsize_theplot[1]),
-            (figsize_theplot[0], figsize_theplot[1]),
-            (figsize_theplot[0] / 3 * 2, figsize_theplot[1] / 3 * 2)]
-
 ### for algos
 
-f, axs = plt.subplots(sizes[run][0], sizes[run][1], figsize=figsizes[run], sharex=True, sharey=True)
-if run == 4:
-    axs = [item for sublist in zip(axs[:, 0], axs[:, 1]) for item in sublist]
-elif run == 3:
-    axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
-else:
-    pass
+f, axs = plt.subplots(3, 3, figsize=(figsize_theplot[0], figsize_theplot[1]), sharex=True, sharey=True)
+axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+
 
 for a, algo in enumerate(algos):
     ax = axs[a]
