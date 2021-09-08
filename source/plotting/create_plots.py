@@ -287,6 +287,146 @@ f.text(0.52, 0.01, x_label, ha='center')
 plt.savefig(os.path.join(outdir, f"overview_2." + image_type))
 plt.close()
 
+
+###############
+# One plot to rule them all, one plot to find them, one plot to bring them all and in the darkness bind them
+###############
+
+outdir = os.path.join("..", "..", "results", folder, "tq_vs_sac")
+os.makedirs(outdir, exist_ok=True)
+
+from  matplotlib.colors import LinearSegmentedColormap
+c = ["red", "tomato", "lightsalmon", "moccasin", "palegreen", "limegreen", "green"]
+v = [0 ,.15 ,.4 ,.5,0.6,.9,1.]
+l = list(zip(v, c))
+cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
+normalize = Normalize(vmin=30, vmax=130, clip=True)
+
+offset_ann = 0.025
+
+# titles
+x_label = r"Relative $\bf{{State}{-}{Action} \; Coverage}$ to Online Policy"
+y_label = r"Relative $\bf{Trajectory \; Quality}$ to Online Policy"
+
+# plot for discussion
+
+### for algos
+
+f, axs = plt.subplots(3, 3, figsize=(figsize_theplot[0], figsize_theplot[1]), sharex=True, sharey=True)
+axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+
+
+for a, algo in enumerate(algos):
+    ax = axs[a]
+
+    ax.axhline(y=1, color="silver")
+    ax.axvline(x=1, color="silver")
+    ax.set_title(algo, fontsize="large")
+
+    x, y, performance = [], [], []
+
+    for e, env in enumerate(envs):
+        for userun in range(1, useruns + 1):
+
+            online_return = np.max(data[env][userun]["online"]["DQN"])
+            random_return = mm.get_data(env, "random", userun)[0][0]
+            online_usap = mm.get_data(env, "er", userun)[2]
+
+            for m, mode in enumerate(modes):
+                try:
+                    performance.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) / (
+                                online_return - random_return) * 100)
+                    x.append(mm.get_data(env, mode, userun)[2] / online_usap)
+                    y.append((mm.get_data(env, mode, userun)[0][0] - random_return) / (online_return - random_return))
+                except:
+                    continue
+
+
+
+    ax.scatter(x, y, s = 100, c=performance, cmap=cmap, norm=normalize, zorder=10)
+
+    """
+    for i in range(len(performance)):
+        ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", zorder=20)
+    """
+    if a == 0:
+        print("(TQ - SAC):", scipy.stats.pearsonr(x, y))
+        print("-" * 30)
+    print(algo, " (TQ - P):", scipy.stats.pearsonr(y, performance))
+    print(algo, " (SAC - P):", scipy.stats.pearsonr(x, performance))
+    print("-" * 30)
+
+
+f.tight_layout(rect=(0.022, 0.022, 1, 1))
+f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
+f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
+plt.savefig(os.path.join(outdir, "algos." + image_type))
+plt.close()
+
+### for environments
+
+for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD"]:
+
+    f, axs = plt.subplots(2, 3, figsize=figsize_envs, sharex=True, sharey=True)
+    axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
+
+    for e, env in enumerate(envs):
+        ax = axs[e]
+
+        ax.axhline(y=1, color="silver")
+        ax.axvline(x=1, color="silver")
+
+        for userun in range(1, useruns + 1):
+            online_return = np.max(data[env][userun]["online"]["DQN"])
+            random_return = mm.get_data(env, "random", userun)[0][0]
+            online_usap = mm.get_data(env, "er", userun)[2]
+
+            x, y, performance = [], [], []
+            for m, mode in enumerate(modes):
+                x.append(mm.get_data(env, mode, userun)[2] / online_usap)
+                y.append((mm.get_data(env, mode, userun)[0][0] - random_return) / (online_return - random_return))
+
+                p = []
+                for algo in algos:
+                    ax.set_title("-".join(env.split("-")[:-1]), fontsize="large")
+
+                    for m, mode in enumerate(modes):
+                        try:
+                            p.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) /
+                                     (online_return - random_return) * 100)
+                        except:
+                            pass
+                performance.append(p)
+
+            if method == "Mean":
+                performance = np.mean(np.asarray(performance), axis=1)
+            elif method == "Maximum":
+                performance = np.max(np.asarray(performance), axis=1)
+            elif method == "Minimum":
+                performance = np.min(np.asarray(performance), axis=1)
+            elif method == "Mean + STD":
+                performance = np.mean(np.asarray(performance), axis=1) + np.std(np.asarray(performance), axis=1)
+            elif method == "Mean - STD":
+                performance = np.mean(np.asarray(performance), axis=1) - np.std(np.asarray(performance), axis=1)
+            elif method == "Median":
+                performance = np.median(np.asarray(performance), axis=1)
+
+            ax.scatter(x, y, s=100, c=performance, cmap=cmap, norm=normalize, zorder=10)
+
+        """
+        for i in range(len(performance)):
+            ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="left",zorder=20)
+            ax.annotate(annotations[i], (x[i] - offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="right", zorder=30)
+        """
+
+    f.tight_layout(rect=(0.022, 0.022, 1, 0.96))
+    f.text(0.53, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
+    f.text(0.53, 0.01, x_label, ha='center', fontsize="large")
+    f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
+    plt.savefig(os.path.join(outdir, f"envs_{method}." + image_type))
+    plt.close()
+
+
 #############################
 #        Comparisons        #
 #############################
@@ -391,169 +531,64 @@ for metric in metrics.keys():
     plt.close()
 """
 
-
-# plot for modes
-f, axs = plt.subplots(2, 3, figsize=figsize_comp, sharex=True)
-axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
-
-for e, env in enumerate(envs):
-
-    ax = axs[e]
-    ax.set_title(env[:-3])
-
-    x, y = list(range(len(buffer))), []
-    for mode in modes:
-        y.append(mm.get_data(env, mode)[0][0])
-    x, y = [list(tuple) for tuple in zip(*sorted(zip(x, y)))]
-
-    ax.plot(x, y, "o-", linestyle="dotted", label=("Behav." if e == 0 else None), color="black")
-
-    # Online Policy
-    csv = data[env]["online"]["DQN"]
-    ax.axhline(y=csv[0], color="black", label=("Online" if e == 0 else None))
-
-    for a, algo in enumerate(algos):
-
-        x, y, sd = [], [], []
-        for m, mode in enumerate(modes):
-            x.append(m)
-            y.append(data[env][mode][algo][0])
-            sd.append(data[env][mode][algo][1])
-        x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
-
-        cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
-        ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
-        ax.plot(x, y, "o-", label=(algo if e == 0 else None), color=f"C{a}")
-
-    x = []
-    for m, mode in enumerate(modes):
-        x.append(m)
-
-    ax.set_xticks(range(len(modes)))
-    ax.set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
-
-f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
-f.tight_layout(rect=(0.008, 0.022, 1, 0.95))
-f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
-f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-plt.savefig(os.path.join(outdir, "buffertypes." + image_type))
-plt.close()
-
-###############
-# One plot to rule them all, one plot to find them, one plot to bring them all and in the darkness bind them
-###############
-
-outdir = os.path.join("..", "..", "results", folder, "tq_vs_sac")
-os.makedirs(outdir, exist_ok=True)
-
-from  matplotlib.colors import LinearSegmentedColormap
-c = ["red", "tomato", "lightsalmon", "moccasin", "palegreen", "limegreen", "green"]
-v = [0 ,.15 ,.4 ,.5,0.6,.9,1.]
-l = list(zip(v, c))
-cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
-normalize = Normalize(vmin=30, vmax=130, clip=True)
-
-offset_ann = 0.025
-
-# titles
-x_label = r"Relative $\bf{{State}{-}{Action} \; Coverage}$ to Online Policy"
-y_label = r"Relative $\bf{Trajectory \; Quality}$ to Online Policy"
-
-# plot for discussion
-
-### for algos
-
-f, axs = plt.subplots(3, 3, figsize=(figsize_theplot[0], figsize_theplot[1]), sharex=True, sharey=True)
-axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
-
-
-for a, algo in enumerate(algos):
-    ax = axs[a]
-
-    ax.axhline(y=1, color="silver")
-    ax.axvline(x=1, color="silver")
-
-    x, y, performance = [], [], []
-
-    for env in envs:
-        ax.set_title(algo, fontsize="large")
-
-        online_return = data[env]["online"]["DQN"][0]
-        random_return = mm.get_data(env, "random")[0][0]
-        online_usap = mm.get_data(env, "er")[2]
-
-        for m, mode in enumerate(modes):
-            x.append(mm.get_data(env, mode)[2] / online_usap)
-            y.append( (mm.get_data(env, mode)[0][0] - random_return) / (online_return - random_return))
-            performance.append((data[env][mode][algo][0] - random_return) / (online_return - random_return) * 100)
-
-    ax.scatter(x, y, s = 100, c=performance, cmap=cmap, norm=normalize, zorder=10)
-
-    for i in range(len(performance)):
-        ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", zorder=20)
-
-    if a == 0:
-        print("(TQ - SAC):", scipy.stats.pearsonr(x, y))
-        print("-" * 30)
-    print(algo, " (TQ - P):", scipy.stats.pearsonr(y, performance))
-    print(algo, " (SAC - P):", scipy.stats.pearsonr(x, performance))
-    print("-" * 30)
-
-
-f.tight_layout(rect=(0.022, 0.022, 1, 1))
-f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
-f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-plt.savefig(os.path.join(outdir, "algos." + image_type))
-plt.close()
-
-### for environments
-
-for method in ["Mean", "Maximum"]:
-
-    f, axs = plt.subplots(2, 3, figsize=figsize_envs, sharex=True, sharey=True)
+for userun in range(1, useruns + 1):
+    # plot for modes
+    f, axs = plt.subplots(2, 3, figsize=figsize_comp, sharex=True)
     axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
 
     for e, env in enumerate(envs):
+
         ax = axs[e]
+        ax.set_title(env[:-3])
 
-        ax.axhline(y=1, color="silver")
-        ax.axvline(x=1, color="silver")
+        x, y = list(range(len(buffer))), []
+        for mode in modes:
+            y.append(mm.get_data(env, mode, userun)[0][0])
+        x, y = [list(tuple) for tuple in zip(*sorted(zip(x, y)))]
 
-        online_return = data[env]["online"]["DQN"][0]
-        random_return = mm.get_data(env, "random")[0][0]
-        online_usap = mm.get_data(env, "er")[2]
+        ax.plot(x, y, "o-", linestyle="dotted", label=("Behav." if e == 0 else None), color="black")
 
-        x, y, performance = [], [], []
-        for m, mode in enumerate(modes):
-            x.append(mm.get_data(env, mode)[2] / online_usap)
-            y.append((mm.get_data(env, mode)[0][0] - random_return) / (online_return - random_return))
+        # Online Policy
+        csv = data[env][userun]["online"]["DQN"]
+        ax.axhline(y=np.max(csv), color="black", label=("Online" if e == 0 else None))
 
-        for algo in algos:
-            ax.set_title("-".join(env.split("-")[:-1]), fontsize="large")
+        for a, algo in enumerate(algos):
 
-            p = []
+            x, y, sd = [], [], []
             for m, mode in enumerate(modes):
-                p.append((data[env][mode][algo][0] - random_return) / (online_return - random_return) * 100)
-            performance.append(p)
+                try:
+                    y.append(np.mean(data[env][userun][mode][algo]))
+                    sd.append(np.std(data[env][userun][mode][algo]))
+                    x.append(m)
+                except:
+                    # print(env, userun, mode, algo)
+                    pass
 
-        if method == "Mean":
-            performance = np.mean(np.asarray(performance), axis=0)
-        elif method == "Maximum":
-            performance = np.max(np.asarray(performance), axis=0)
+            if len(x) == 0 or len(y) == 0 or len(sd) == 0:
+                continue
 
-        ax.scatter(x, y, s = 100, c=performance, cmap=cmap, norm=normalize, zorder=10)
+            x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
 
-        for i in range(len(performance)):
-            ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="left",zorder=20)
-            ax.annotate(annotations[i], (x[i] - offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="right", zorder=30)
+            cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
+            ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
+            ax.plot(x, y, "o-", label=(algo if e == 0 else None), color=f"C{a}")
 
-    f.tight_layout(rect=(0.022, 0.022, 1, 0.96))
-    f.text(0.53, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
-    f.text(0.53, 0.01, x_label, ha='center', fontsize="large")
+        x = []
+        for m, mode in enumerate(modes):
+            x.append(m)
+
+        ax.set_xticks(range(len(modes)))
+        ax.set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
+
+    f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
+    f.tight_layout(rect=(0.008, 0.022, 1, 0.95))
+    f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
     f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-    plt.savefig(os.path.join(outdir, f"envs_{method}." + image_type))
+    plt.savefig(os.path.join(outdir, f"buffertypes_userun{userun}." + image_type))
     plt.close()
 
+
+"""
 ### for entropy
 
 f = plt.figure(figsize=(6.2, 6))
@@ -596,3 +631,4 @@ plt.close()
 
 print("r (TQ - E):", scipy.stats.pearsonr(tq, en))
 print("r (SAC - E):", scipy.stats.pearsonr(sac, en))
+"""
