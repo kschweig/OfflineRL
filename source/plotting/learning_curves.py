@@ -19,6 +19,8 @@ image_type = "png"
 
 envs = ['CartPole-v1', "MountainCar-v0", "MiniGrid-LavaGapS7-v0", "MiniGrid-Dynamic-Obstacles-8x8-v0",
         "Breakout-MinAtar-v0", "SpaceInvaders-MinAtar-v0"]
+minatar = ["Breakout-MinAtar-v0", "SpaceInvaders-MinAtar-v0"]
+small_minatar = True
 iterations = [100000, 100000, 100000, 100000, 2000000, 2000000]
 algos = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 datasets = ["random", "mixed", "er", "noisy", "fully"]
@@ -31,6 +33,8 @@ folders = ["avd", "return"]
 origin = os.path.join("..", "..", "results", "csv_per_userun")
 target = os.path.join("..", "..", "results", "learning")
 
+
+#### online
 
 for e, env in enumerate(tqdm(envs)):
     for folder in folders:
@@ -69,16 +73,24 @@ for e, env in enumerate(tqdm(envs)):
                , va='center', rotation='vertical', fontsize="large")
 
         os.makedirs(os.path.join(target, folder, env), exist_ok=True)
-        plt.savefig(os.path.join(target, folder, env, f"online." + image_type))
+        plt.savefig(os.path.join(target, folder, env, f"DQN_online." + image_type))
         plt.close()
+
+#### per algorithm
 
 for e, env in enumerate(envs):
     for ds in tqdm(datasets, desc=env):
         for folder in folders:
-            f, axs = plt.subplots(3, 3, figsize=(16, 12), sharex=True, sharey=True)
-            axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+            if env in minatar and small_minatar:
+                f, axs = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+                axs = [item for sublist in zip(axs[:, 0], axs[:, 1]) for item in sublist]
+                algos_ = ["BC", "DQN", "BCQ", "CQL"]
+            else:
+                f, axs = plt.subplots(3, 3, figsize=(16, 12), sharex=True, sharey=True)
+                axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+                algos_ = algos
 
-            for a, algo in enumerate(algos):
+            for a, algo in enumerate(algos_):
                 for userun in range(1, useruns + 1):
                     try:
                         csv = np.genfromtxt(os.path.join(origin, folder, env, f"userun{userun}", f"{algo}_{ds}.csv"),

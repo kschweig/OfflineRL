@@ -20,7 +20,11 @@ folders = ["avd", "return"]
 ### join per userun
 
 for e, env in enumerate(envs):
-    for algo in tqdm(algos, desc=f"{env}"):
+    if env in ["Breakout-MinAtar-v0", "SpaceInvaders-MinAtar-v0"]:
+        algos_ = ["BC", "DQN", "BCQ", "CQL"]
+    else:
+        algos_ = algos
+    for algo in tqdm(algos_, desc=f"{env}"):
         for ds in datasets:
             for folder in folders:
                 for userun in range(useruns):
@@ -32,11 +36,11 @@ for e, env in enumerate(envs):
                             results.append(np.genfromtxt(os.path.join(origin, folder, f"ex{e + 1}", f"userun{userun + 1}",
                                                                       f"{env}_{algo}_{ds}_run{run + 1}.csv")).tolist())
                         except:
-                            pass
+                            print(f"no data available for {env}, {algo}, {ds}, userun {userun + 1}, run{run + 1}")
+
                     length = len(results)
                     # if no data available, break out of loop
                     if length == 0:
-                        print(f"no data available for {env}, {algo}, {ds}, userun {userun + 1}")
                         continue
 
                     results = np.asarray(results).reshape(length, -1).transpose((1, 0))
@@ -46,14 +50,19 @@ for e, env in enumerate(envs):
                 # online
                 for run in range(runs):
                     shutil.copy(os.path.join(origin, folder, f"ex{e + 1}", f"{env}_online_run{run + 1}.csv"),
-                                os.path.join(target, folder, env, f"userun{run + 1}", "online.csv"))
+                                os.path.join(target, folder, env, f"userun{run + 1}", "DQN_online.csv"))
 
 
+"""
 ### over all useruns
 target = os.path.join("..", "..", "results", "csv")
 
 for e, env in enumerate(envs):
-    for algo in tqdm(algos, desc=f"{env}"):
+    if env in ["Breakout-MinAtar-v0", "SpaceInvaders-MinAtar-v0"]:
+        algos_ = ["BC", "DQN", "BCQ", "CQL"]
+    else:
+        algos_ = algos
+    for algo in tqdm(algos_, desc=f"{env}"):
         for ds in datasets:
             for folder in folders:
                 results = []
@@ -65,12 +74,11 @@ for e, env in enumerate(envs):
                             results.append(np.genfromtxt(os.path.join(origin, folder, f"ex{e + 1}", f"userun{userun + 1}",
                                                                       f"{env}_{algo}_{ds}_run{run + 1}.csv")).tolist())
                         except:
-                            pass
+                            print(f"no data available for {env}, {algo}, {ds}, userun {userun + 1}, run{run + 1}")
 
                 length = len(results)
                 # if no data available, break out of loop
                 if length == 0:
-                    print(f"no data available for {env}, {algo}, {ds}, userun {userun + 1}")
                     continue
                 results = np.asarray(results).reshape(length, -1).transpose((1, 0))
 
@@ -87,3 +95,4 @@ for e, env in enumerate(envs):
                 length = len(results)
                 results = np.asarray(results).reshape(length, -1).transpose((1, 0))
                 np.savetxt(os.path.join(target, folder, env, f"online.csv"), results, delimiter=";")
+"""

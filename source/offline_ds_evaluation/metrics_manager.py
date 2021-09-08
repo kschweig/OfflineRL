@@ -11,6 +11,7 @@ class MetricsManager:
         self.data["/".join(new_data[:2])] = new_data[2:]
 
     def get_data(self, env, buffer_type, userun):
+        userun = str(userun)
         return self.data["/".join([env, buffer_type, userun])]
 
     def recode(self, userun):

@@ -31,7 +31,7 @@ figsize_theplot = (12, 12)
 experiments = ["ex1", "ex2", "ex3", "ex4", "ex5", "ex6"]
 
 mm = MetricsManager(0)
-
+useruns = 5
 
 for ex in experiments:
     for userun in range(1, 6):
@@ -41,12 +41,11 @@ for ex in experiments:
                 m = pickle.load(f)
                 m.recode(userun)
             mm.data.update(m.data)
-            print(mm.data)
 
 # static stuff
 
 envs = {'CartPole-v1': 0, 'MountainCar-v0': 1, "MiniGrid-LavaGapS7-v0": 2, "MiniGrid-Dynamic-Obstacles-8x8-v0": 3,
-        'Breakout-MinAtar-v0': 4, "Space_invaders-MinAtar-v0": 5}
+        'Breakout-MinAtar-v0': 4, "SpaceInvaders-MinAtar-v0": 5}
 
 algos = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 
@@ -77,6 +76,40 @@ def plt_csv(ax, csv, algo, mode, ylims=None, set_title=True, color=None, set_lab
         ax.set_ylim(bottom=ylims[0], top=ylims[1])
 
 
+## get data
+indir = os.path.join("..", "..", "results", "csv_per_userun", "return")
+
+files = []
+for file in glob.iglob(os.path.join(indir, "**", "*.csv"), recursive=True):
+    files.append(file)
+
+data = dict()
+for file in files:
+
+    name = file.split("/")[-1]
+    userun = int(file.split("/")[-2][-1])
+    env = file.split("/")[-3]
+    algo = name.split("_")[-2]
+    mode = name.split("_")[-1].split(".")[0]
+
+
+    try:
+        csv = np.loadtxt(file, delimiter=";")
+    except:
+        print("Error in ", env, mode, algo)
+
+    if len(csv.shape) == 1:
+        csv = csv.reshape(-1, 1)
+
+    if not data.keys() or env not in data.keys():
+        data[env] = dict()
+    if not data[env].keys() or userun not in data[env].keys():
+        data[env][userun] = dict()
+    if not data[env][userun].keys() or mode not in data[env][userun].keys():
+        data[env][userun][mode] = dict()
+
+    data[env][userun][mode][algo] = csv
+
 
 ###############
 # plot metrics for policies
@@ -90,128 +123,142 @@ os.makedirs(outdir, exist_ok=True)
 # titles
 x_label = "Dataset"
 
-# plot for discussion
+# dataset overview
 
-f, axs = plt.subplots(2, 3, figsize=figsize, sharex=True)
-axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:,2]) for item in sublist]
+for userun in range(1, useruns + 1):
+    f, axs = plt.subplots(1, 3, figsize=figsize_half, sharex=True)
+    for m, metric in enumerate([(0, 0), 2, (3, 0)]):
+        for env in envs:
+            x = []
+            random_return = mm.get_data(env, "random", userun)[0][0]
+            online_usap = mm.get_data(env, "er", userun)[2]
+            for mode in modes:
+                if m == 1 or m == 3:
+                    x.append(mm.get_data(env, mode, userun)[metric])
+                else:
+                    x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
 
-for m, metric in enumerate([(0, 0), 2, (3, 0), 1, (5, 0), (4, 0)]):
+            if m == 0:
+                csv = data[env][userun]["online"]["DQN"]
+                x = [(x_ - random_return) / (np.max(csv) - random_return) for x_ in x]
+                axs[m].axhline(y=1, color="silver")
+            if m == 1:
+                x = [x_ / online_usap for x_ in x]
+                axs[m].axhline(y=1, color="silver")
 
-    for env in envs:
-        x = []
-        random_return = mm.get_data(env, "random")[0][0]
-        for mode in modes:
-            if m == 1 or m == 3:
-                x.append(mm.get_data(env, mode)[metric])
-            else:
-                x.append(mm.get_data(env, mode)[metric[0]][metric[1]])
+            axs[m].plot(range(len(x)), x, "-o", label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
 
         if m == 0:
-            csv = data[env]["online"]["DQN"]
-            x = [ (x_ - random_return) / (np.max(csv) - random_return) for x_ in x]
-            axs[m].axhline(y=1, color="silver")
+            axs[m].set_ylabel("Relative Trajectory Quality")
+        elif m == 1:
+            axs[m].set_ylabel("Relative State-Action Coverage")
+        else:
+            axs[m].set_ylabel(metrics[metric])
 
-        axs[m].plot(range(len(x)), x, "-o", label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
-
-    if m == 1 or m == 3 or m == 4:
-        axs[m].set_yscale('log')
-
-    if m == 5:
-        axs[m].set_ylim(0.74, 1.01)
-
-    if m == 0:
-        axs[m].set_ylabel("Normalized Return")
-    else:
-        axs[m].set_ylabel(metrics[metric])
-    axs[m].set_xticks(range(len(modes)))
-    axs[m].set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
-
-f.legend(loc="upper center", ncol=len(env), fontsize="small")
-f.tight_layout(rect=(0, 0.022, 1, 0.95))
-f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
-plt.savefig(os.path.join(outdir, "overview_6." + image_type))
-plt.close()
-
-# plot for thesis
-
+        axs[m].set_ylim(bottom=-0.05, top=1.45)
+        axs[m].set_xticks(range(len(modes)))
+        axs[m].set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
+    axs[-1].set_ylim(bottom=-0.05, top=1.05)
+    f.legend(loc="upper center", ncol=len(env), fontsize="small")
+    f.tight_layout(rect=(0, 0.022, 1, 0.92))
+    f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
+    plt.savefig(os.path.join(outdir, f"overview_3_userun{userun}." + image_type))
+    plt.close()
+# compact representation
 f, axs = plt.subplots(1, 3, figsize=figsize_half, sharex=True)
-
 for m, metric in enumerate([(0, 0), 2, (3, 0)]):
-
-    for env in envs:
-        x = []
-        random_return = mm.get_data(env, "random")[0][0]
-        online_usap = mm.get_data(env, "er")[2]
+    for e, env in enumerate(envs):
+        x_all = []
         for mode in modes:
-            if m == 1 or m == 3:
-                x.append(mm.get_data(env, mode)[metric])
-            else:
-                x.append(mm.get_data(env, mode)[metric[0]][metric[1]])
+            x = []
+            for userun in range(1, useruns + 1):
+                random_return = mm.get_data(env, "random", userun)[0][0]
+                online_usap = mm.get_data(env, "er", userun)[2]
 
-        if m == 0:
-            csv = data[env]["online"]["DQN"]
-            x = [(x_ - random_return) / (np.max(csv) - random_return) for x_ in x]
-            axs[m].axhline(y=1, color="silver")
-        if m == 1:
-            x = [x_ / online_usap for x_ in x]
-            axs[m].axhline(y=1, color="silver")
+                if m == 1 or m == 3:
+                    x.append(mm.get_data(env, mode, userun)[metric])
+                else:
+                    x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
 
-        axs[m].plot(range(len(x)), x, "-o", label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
+            if m == 0:
+                csv = data[env][userun]["online"]["DQN"]
+                x = [(x_i - random_return) / (np.max(csv) - random_return) for x_i in x]
+            if m == 1:
+                x = [x_i / online_usap for x_i in x]
+            x_all.append(np.asarray(x))
+
+        pos = [0.2 + 0.12 * e + m_ for m_ in range(len(modes))]
+
+        print(x_all[0])
+        axs[m].boxplot(x_all, positions=pos, widths=0.1, sym="", zorder=20,
+                       medianprops={"c": f"C{e}"},
+                       boxprops={"color": f"C{e}"},
+                       whiskerprops={"color": f"C{e}"},
+                       capprops={"color": f"C{e}"})
+        #axs[m].plot(range(len(x)), x, "-o", label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
 
     if m == 0:
         axs[m].set_ylabel("Relative Trajectory Quality")
+        axs[m].axhline(y=1, color="silver")
     elif m == 1:
         axs[m].set_ylabel("Relative State-Action Coverage")
+        axs[m].axhline(y=1, color="silver")
     else:
         axs[m].set_ylabel(metrics[metric])
-    axs[m].set_xticks(range(len(modes)))
-    axs[m].set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
 
+    axs[m].set_ylim(bottom=-0.05, top=1.45)
+    axs[m].set_xticks([i for i in range(len(modes))])
+    axs[m].set_xticklabels([buffer[m] for m in modes],
+                           fontsize="x-small", rotation=15, rotation_mode="anchor")
+axs[-1].set_ylim(bottom=-0.05, top=1.05)
 f.legend(loc="upper center", ncol=len(env), fontsize="small")
 f.tight_layout(rect=(0, 0.022, 1, 0.92))
 f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
-plt.savefig(os.path.join(outdir, "overview_3." + image_type))
+plt.savefig(os.path.join(outdir, f"overview_3." + image_type))
 plt.close()
 
+"""
 # plot for presentation
 
-f, axs = plt.subplots(1, 2, figsize=figsize_half_half, sharex=True)
+for userun in range(1, useruns + 1):
 
-for m, metric in enumerate([(0, 0), 2]):
+    f, axs = plt.subplots(1, 2, figsize=figsize_half_half, sharex=True)
 
-    for env in envs:
-        x = []
-        random_return = mm.get_data(env, "random")[0][0]
-        online_usap = mm.get_data(env, "er")[2]
-        for mode in modes:
-            if m == 1 or m == 3:
-                x.append(mm.get_data(env, mode)[metric])
-            else:
-                x.append(mm.get_data(env, mode)[metric[0]][metric[1]])
+    for m, metric in enumerate([(0, 0), 2]):
+        for env in envs:
+            x = []
+            random_return = mm.get_data(env, "random", userun)[0][0]
+            online_usap = mm.get_data(env, "er", userun)[2]
+            for mode in modes:
+                if m == 1 or m == 3:
+                    x.append(mm.get_data(env, mode, userun)[metric])
+                else:
+                    x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
+
+            if m == 0:
+                csv = data[env][userun]["online"]["DQN"]
+                x = [(x_ - random_return) / (np.max(csv) - random_return) for x_ in x]
+                axs[m].axhline(y=1, color="silver")
+            if m == 1:
+                x = [x_ / online_usap for x_ in x]
+                axs[m].axhline(y=1, color="silver")
+
+            axs[m].plot(range(len(x)), x, "-o", label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
 
         if m == 0:
-            csv = data[env]["online"]["DQN"]
-            x = [(x_ - random_return) / (np.max(csv) - random_return) for x_ in x]
-            axs[m].axhline(y=1, color="silver")
-        if m == 1:
-            x = [x_ / online_usap for x_ in x]
-            axs[m].axhline(y=1, color="silver")
+            axs[m].set_ylabel("Relative Trajectory Quality")
+        elif m == 1:
+            axs[m].set_ylabel("Relative State-Action Coverage")
+        axs[m].set_xticks(range(len(modes)))
+        axs[m].set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
+        axs[m].set_ylim(bottom=-0.05, top=1.45)
 
-        axs[m].plot(range(len(x)), x, "-o", label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
-
-    if m == 0:
-        axs[m].set_ylabel("Relative Trajectory Quality")
-    elif m == 1:
-        axs[m].set_ylabel("Relative State-Action Coverage")
-    axs[m].set_xticks(range(len(modes)))
-    axs[m].set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
-
-f.legend(loc="upper center", ncol=(len(envs) // 2), fontsize="x-small")
-f.tight_layout(rect=(0, 0.022, 1, 0.88))
-f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
-plt.savefig(os.path.join(outdir, "overview_2." + image_type))
-plt.close()
-
+    f.legend(loc="upper center", ncol=(len(envs) // 2), fontsize="x-small")
+    f.tight_layout(rect=(0, 0.022, 1, 0.88))
+    f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
+    plt.savefig(os.path.join(outdir, f"overview_2_userun{userun}." + image_type))
+    plt.close()
+"""
 #############################
 #        Comparisons        #
 #############################
