@@ -43,7 +43,7 @@ for e, env in enumerate(tqdm(envs)):
 
         all = []
         for r in range(1, useruns + 1):
-            csv = np.genfromtxt(os.path.join(origin, folder, env, f"userun{r}", "online.csv"), delimiter=";")
+            csv = np.genfromtxt(os.path.join(origin, folder, env, f"userun{r}", "DQN_online.csv"), delimiter=";")
             axs[r].plot(np.linspace(iterations[e] / len(csv), iterations[e], len(csv)), csv, color="black")
             all.append(csv.tolist())
             axs[r].set_title(f"Run {r}")
