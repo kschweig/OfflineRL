@@ -26,7 +26,8 @@ figsize_half_half = (8, 4)
 figsize_small = (16, 3)
 figsize_comp = (12, 6)
 figsize_envs = (12, 7.2)
-figsize_theplot = (12, 12)
+figsize_theplot = (13, 12)
+figsize_thesmallplot = (9, 8)
 
 # metric manager
 experiments = ["ex1", "ex2", "ex3", "ex4", "ex5", "ex6"]
@@ -174,6 +175,57 @@ f.text(0.52, 0.01, x_label, ha='center')
 plt.savefig(os.path.join(outdir, f"overview_3_line." + image_type))
 plt.close()
 
+# compact representation averaged over envs
+f, axs = plt.subplots(1, 3, figsize=figsize_half, sharex=True)
+for m, metric in enumerate([(0, 0), 2, (3, 0)]):
+    x_all = []
+    for mode in modes:
+        x = []
+        for e, env in enumerate(envs):
+            for userun in range(1, useruns + 1):
+                random_return = mm.get_data(env, "random", userun)[0][0]
+                online_usap = mm.get_data(env, "er", userun)[2]
+
+                if m == 1:
+                    result = mm.get_data(env, mode, userun)[metric]
+                else:
+                    result = mm.get_data(env, mode, userun)[metric[0]][metric[1]]
+
+                if m == 0:
+                    csv = data[env][userun]["online"]["DQN"]
+                    x.append((result - random_return) / (np.max(csv) - random_return))
+                elif m == 1:
+                    x.append(result / online_usap)
+                else:
+                    x.append(result)
+
+        x_all.append(x)
+
+    axs[m].boxplot(x_all, positions=range(len(modes)), zorder=20,
+                   medianprops={"c": f"C{0}", "linewidth": 1.5},
+                   boxprops={"c": f"C{0}", "linewidth": 1.5},
+                   whiskerprops={"c": f"C{0}", "linewidth": 1.5},
+                   capprops={"c": f"C{0}", "linewidth": 1.5},
+                   flierprops={"markeredgecolor": f"C{0}"})#, "markeredgewidth": 1.5})
+
+    if m == 0:
+        axs[m].set_ylabel("Relative Trajectory Quality")
+        axs[m].axhline(y=1, color="silver")
+    elif m == 1:
+        axs[m].set_ylabel("Relative State-Action Coverage")
+        axs[m].axhline(y=1, color="silver")
+    else:
+        axs[m].set_ylabel(metrics[metric])
+
+    axs[m].set_ylim(bottom=-0.05, top=1.45)
+    axs[m].set_xticks([i for i in range(len(modes))])
+    axs[m].set_xticklabels([buffer[m] for m in modes],fontsize="x-small", rotation=15, rotation_mode="anchor")
+axs[-1].set_ylim(bottom=-0.05, top=1.05)
+f.tight_layout(rect=(0, 0.022, 1, 1))
+f.text(0.52, 0.01, x_label, ha='center')
+plt.savefig(os.path.join(outdir, f"overview_3_avg." + image_type))
+plt.close()
+
 
 # compact representation
 f, axs = plt.subplots(1, 3, figsize=figsize_half, sharex=True)
@@ -296,11 +348,12 @@ outdir = os.path.join("..", "..", "results", folder, "tq_vs_sac")
 os.makedirs(outdir, exist_ok=True)
 
 from  matplotlib.colors import LinearSegmentedColormap
-c = ["red", "tomato", "lightsalmon", "moccasin", "palegreen", "limegreen", "green"]
-v = [0 ,.15 ,.4 ,.5,0.6,.9,1.]
+c = ["red", "tomato", "lightsalmon", "wheat", "palegreen", "limegreen", "green"]
+v = [i / (len(c) - 1) for i in range(len(c))]
+print(v)
 l = list(zip(v, c))
 cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
-normalize = Normalize(vmin=30, vmax=130, clip=True)
+normalize = Normalize(vmin=0, vmax=120, clip=True)
 
 offset_ann = 0.025
 
@@ -309,59 +362,139 @@ x_label = r"Relative $\bf{{State}{-}{Action} \; Coverage}$ to Online Policy"
 y_label = r"Relative $\bf{Trajectory \; Quality}$ to Online Policy"
 
 # plot for discussion
+### algos not averaged
 
-### for algos
+types = ["all", "noMinAtar", "MinAtar"]
 
-f, axs = plt.subplots(3, 3, figsize=(figsize_theplot[0], figsize_theplot[1]), sharex=True, sharey=True)
-axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
 
+    if t == 2:
+        f, axs = plt.subplots(2, 2, figsize=(figsize_thesmallplot[0], figsize_thesmallplot[1]), sharex=True, sharey=True)
+        axs = [item for sublist in zip(axs[:, 0], axs[:, 1]) for item in sublist]
+        algos_ = ["BC", "DQN", "BCQ", "CQL"]
+    else:
+        f, axs = plt.subplots(3, 3, figsize=(figsize_theplot[0], figsize_theplot[1]), sharex=True, sharey=True)
+        axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+        algos_ = algos
 
-for a, algo in enumerate(algos):
-    ax = axs[a]
+    for a, algo in enumerate(algos_):
+        ax = axs[a]
 
-    ax.axhline(y=1, color="silver")
-    ax.axvline(x=1, color="silver")
-    ax.set_title(algo, fontsize="large")
+        ax.axhline(y=1, color="silver")
+        ax.axvline(x=1, color="silver")
+        ax.set_title(algo, fontsize="large")
 
-    x, y, performance = [], [], []
+        x, y, performance = [], [], []
 
-    for e, env in enumerate(envs):
-        for userun in range(1, useruns + 1):
+        for e, env in enumerate(list(environments)):
+            for userun in range(1, useruns + 1):
 
-            online_return = np.max(data[env][userun]["online"]["DQN"])
-            random_return = mm.get_data(env, "random", userun)[0][0]
-            online_usap = mm.get_data(env, "er", userun)[2]
+                online_return = np.max(data[env][userun]["online"]["DQN"])
+                random_return = mm.get_data(env, "random", userun)[0][0]
+                online_usap = mm.get_data(env, "er", userun)[2]
 
-            for m, mode in enumerate(modes):
-                try:
-                    performance.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) / (
-                                online_return - random_return) * 100)
-                    x.append(mm.get_data(env, mode, userun)[2] / online_usap)
-                    y.append((mm.get_data(env, mode, userun)[0][0] - random_return) / (online_return - random_return))
-                except:
-                    continue
+                for m, mode in enumerate(modes):
+                    try:
+                        performance.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) / (
+                                    online_return - random_return) * 100)
+                        x.append(mm.get_data(env, mode, userun)[2] / online_usap)
+                        y.append((mm.get_data(env, mode, userun)[0][0] - random_return) / (online_return - random_return))
+                    except:
+                        continue
 
+        ax.scatter(x, y, s = 100, c=performance, cmap=cmap, norm=normalize, zorder=10)
 
-
-    ax.scatter(x, y, s = 100, c=performance, cmap=cmap, norm=normalize, zorder=10)
-
-    """
-    for i in range(len(performance)):
-        ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", zorder=20)
-    """
-    if a == 0:
-        print("(TQ - SAC):", scipy.stats.pearsonr(x, y))
+        """
+        for i in range(len(performance)):
+            ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", zorder=20)
+        """
+        if a == 0:
+            print("-" * 30)
+            print(types[t])
+            print("(TQ - SAC):", " ".join([f"{round(i, 3)}" for i in scipy.stats.pearsonr(x, y)]))
+            print("-" * 30)
+        print(algo, " (TQ - P):", " ".join([f"{round(i, 3)}" for i in scipy.stats.pearsonr(y, performance)]))
+        print(algo, " (SAC - P):", " ".join([f"{round(i, 3)}" for i in scipy.stats.pearsonr(x, performance)]))
         print("-" * 30)
-    print(algo, " (TQ - P):", scipy.stats.pearsonr(y, performance))
-    print(algo, " (SAC - P):", scipy.stats.pearsonr(x, performance))
-    print("-" * 30)
+
+    f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
+               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+
+    f.tight_layout(rect=(0.022, 0.022, 0.92, 1))
+    f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
+    f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
+    plt.savefig(os.path.join(outdir, f"algos_{types[t]}." + image_type))
+    plt.close()
 
 
-f.tight_layout(rect=(0.022, 0.022, 1, 1))
-f.text(0.52, 0.01, x_label, ha='center', fontsize="large")
-f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-plt.savefig(os.path.join(outdir, "algos." + image_type))
-plt.close()
+### algos averaged
+
+for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
+    if t == 2:
+        f, axs = plt.subplots(2, 2, figsize=(figsize_thesmallplot[0], figsize_thesmallplot[1]), sharex=True,
+                              sharey=True)
+        axs = [item for sublist in zip(axs[:, 0], axs[:, 1]) for item in sublist]
+        algos_ = ["BC", "DQN", "BCQ", "CQL"]
+    else:
+        f, axs = plt.subplots(3, 3, figsize=(figsize_theplot[0], figsize_theplot[1]), sharex=True, sharey=True)
+        axs = [item for sublist in zip(axs[:, 0], axs[:, 1], axs[:, 2]) for item in sublist]
+        algos_ = algos
+
+    for a, algo in enumerate(algos_):
+        ax = axs[a]
+
+        ax.axhline(y=1, color="silver")
+        ax.axvline(x=1, color="silver")
+        ax.set_title(algo, fontsize="large")
+
+        x_, y_, performance_ = [], [], []
+
+        for e, env in enumerate(list(environments)):
+            x, y, performance = [], [], []
+            for userun in range(1, useruns + 1):
+
+                online_return = np.max(data[env][userun]["online"]["DQN"])
+                random_return = mm.get_data(env, "random", userun)[0][0]
+                online_usap = mm.get_data(env, "er", userun)[2]
+
+                for m, mode in enumerate(modes):
+                    try:
+                        performance.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) / (
+                                    online_return - random_return) * 100)
+                        x.append(mm.get_data(env, mode, userun)[2] / online_usap)
+                        y.append((mm.get_data(env, mode, userun)[0][0] - random_return) / (online_return - random_return))
+                    except:
+                        continue
+
+            x_.extend(np.mean(np.asarray(x).reshape(useruns, -1), axis=0).tolist())
+            y_.extend(np.mean(np.asarray(y).reshape(useruns, -1), axis=0).tolist())
+            performance_.extend(np.mean(np.asarray(performance).reshape(useruns, -1), axis=0).tolist())
+
+
+        ax.scatter(x_, y_, s = 100, c=performance_, cmap=cmap, norm=normalize, zorder=10)
+
+        """
+        for i in range(len(performance_)):
+            ax.annotate(f"{int(performance_[i])}%", (x_[i] + offset_ann, y_[i] + offset_ann), fontsize="x-small", zorder=20)
+        """
+
+        if a == 0:
+            print("-" * 30)
+            print(types[t])
+            print("(TQ - SAC):", " ".join([f"{round(i, 3)}" for i in scipy.stats.pearsonr(x_, y_)]))
+            print("-" * 30)
+        print(algo, " (TQ - P):", " ".join([f"{round(i, 3)}" for i in scipy.stats.pearsonr(y_, performance_)]))
+        print(algo, " (SAC - P):", " ".join([f"{round(i, 3)}" for i in scipy.stats.pearsonr(x_, performance_)]))
+        print("-" * 30)
+
+    f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
+               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+
+    f.tight_layout(rect=(0.022, 0.022, 0.92, 1))
+    f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
+    f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
+    plt.savefig(os.path.join(outdir, f"algos_avg_{types[t]}." + image_type))
+    plt.close()
 
 ### for environments
 
@@ -389,13 +522,11 @@ for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD
                 p = []
                 for algo in algos:
                     ax.set_title("-".join(env.split("-")[:-1]), fontsize="large")
-
-                    for m, mode in enumerate(modes):
-                        try:
-                            p.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) /
-                                     (online_return - random_return) * 100)
-                        except:
-                            pass
+                    try:
+                        p.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) /
+                                 (online_return - random_return) * 100)
+                    except:
+                        pass
                 performance.append(p)
 
             if method == "Mean":
@@ -419,11 +550,78 @@ for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD
             ax.annotate(annotations[i], (x[i] - offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="right", zorder=30)
         """
 
-    f.tight_layout(rect=(0.022, 0.022, 1, 0.96))
-    f.text(0.53, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
-    f.text(0.53, 0.01, x_label, ha='center', fontsize="large")
+    f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
+               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+
+    f.tight_layout(rect=(0.022, 0.022, 0.92, 0.96))
+    f.text(0.5, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
+    f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
     f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
     plt.savefig(os.path.join(outdir, f"envs_{method}." + image_type))
+    plt.close()
+
+#### for Environments average
+
+for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD"]:
+
+    f, axs = plt.subplots(2, 3, figsize=figsize_envs, sharex=True, sharey=True)
+    axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
+
+    for e, env in enumerate(envs):
+        ax = axs[e]
+
+        ax.axhline(y=1, color="silver")
+        ax.axvline(x=1, color="silver")
+
+        for userun in range(1, useruns + 1):
+            online_return = np.max(data[env][userun]["online"]["DQN"])
+            random_return = mm.get_data(env, "random", userun)[0][0]
+            online_usap = mm.get_data(env, "er", userun)[2]
+
+            x, y, performance = [], [], []
+            for m, mode in enumerate(modes):
+                x.append(mm.get_data(env, mode, userun)[2] / online_usap)
+                y.append((mm.get_data(env, mode, userun)[0][0] - random_return) / (online_return - random_return))
+
+                p = []
+                for algo in algos:
+                    ax.set_title("-".join(env.split("-")[:-1]), fontsize="large")
+                    try:
+                        p.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) /
+                                 (online_return - random_return) * 100)
+                    except:
+                        pass
+                performance.append(p)
+
+        if method == "Mean":
+            performance = np.mean(np.asarray(performance), axis=1)
+        elif method == "Maximum":
+            performance = np.max(np.asarray(performance), axis=1)
+        elif method == "Minimum":
+            performance = np.min(np.asarray(performance), axis=1)
+        elif method == "Mean + STD":
+            performance = np.mean(np.asarray(performance), axis=1) + np.std(np.asarray(performance), axis=1)
+        elif method == "Mean - STD":
+            performance = np.mean(np.asarray(performance), axis=1) - np.std(np.asarray(performance), axis=1)
+        elif method == "Median":
+            performance = np.median(np.asarray(performance), axis=1)
+
+        ax.scatter(x, y, s=100, c=performance, cmap=cmap, norm=normalize, zorder=10)
+
+        """
+        for i in range(len(performance)):
+            ax.annotate(f"{int(performance[i])}%", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="left",zorder=20)
+            ax.annotate(annotations[i], (x[i] - offset_ann, y[i] + offset_ann), fontsize="x-small", va="bottom", ha="right", zorder=30)
+        """
+
+    f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
+               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+
+    f.tight_layout(rect=(0.022, 0.022, 0.92, 0.96))
+    f.text(0.5, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
+    f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
+    f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
+    plt.savefig(os.path.join(outdir, f"envs_avg_{method}." + image_type))
     plt.close()
 
 
@@ -442,94 +640,98 @@ os.makedirs(outdir, exist_ok=True)
 ###############
 
 # titles
-y_label = "Maximum Moving Average Return"
+y_label = "Maximum Average Return"
 x_label = "Dataset"
 
-"""
-for metric in metrics.keys():
+for userun in range(1, useruns + 1):
+    for metric in metrics.keys():
 
-    f, axs = plt.subplots(2, 3, figsize=figsize_comp, sharex=(metrics[metric] == "Entropy"))
-    axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
+        f, axs = plt.subplots(2, 3, figsize=figsize_comp, sharex=(metrics[metric] == "Entropy"))
+        axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
 
-    for e, env in enumerate(envs):
+        for e, env in enumerate(envs):
 
-        ax = axs[e]
-        ax.set_title(env[:-3])
+            ax = axs[e]
+            ax.set_title(env[:-3])
 
-        for a, algo in enumerate(algos):
-            for userun in range(1, useruns + 1):
-                x, y, sd = [], [], []
-                for mode in modes:
-                    if metric == 1 or metric == 2:
-                        x.append(mm.get_data(env, mode, userun)[metric])
-                    else:
-                        x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
-                    y.append(data[env][mode][algo])
-                    sd.append(data[env][mode][algo][1])
-
-                x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
-
-                cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
-                ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
-                ax.plot(x, y, "o-", label=(algo if e == 1 else None), color=f"C{a}")
-
-        x, y = [], []
-        for mode in modes:
-            if metric == 1 or metric == 2:
-                x.append(mm.get_data(env, mode)[metric])
-            else:
-                x.append(mm.get_data(env, mode)[metric[0]][metric[1]])
-            y.append(mm.get_data(env, mode)[0][0])
-        x, y = [list(tuple) for tuple in zip(*sorted(zip(x, y)))]
-
-        ax.plot(x, y, "o-", linestyle="dotted", label=("Behav." if e==0 else None), color="black")
-
-        xmax, xmin, x_ = 0, 9e9, []
-        for m, mode in enumerate(modes):
-            if metric == 1 or metric == 2:
-                x = mm.get_data(env, mode)[metric]
-            else:
-                x = mm.get_data(env, mode)[metric[0]][metric[1]]
-            xmin = x if x < xmin else xmin
-            xmax = x if x > xmax else xmax
-            x_.append(x)
-
-        # adjust markings if they overlap! do multiple times to be sure
-        for _ in range(10):
-            adjusted, no_changes = [], True
-            for i in range(len(x_)):
-                for j in range(len(x_)):
-                    if i != j and i not in adjusted and abs(x_[i] - x_[j]) < 0.08 * (xmax - xmin):
-                        delta = 0.08 * (xmax - xmin) - abs(x_[i] - x_[j])
-                        if x_[i] < x_[j]:
-                            x_[i] -= delta / 2
-                            x_[j] += delta / 2
+            for a, algo in enumerate(algos):
+                try:
+                    x, y, sd = [], [], []
+                    for mode in modes:
+                        if metric == 1 or metric == 2:
+                            x.append(mm.get_data(env, mode, userun)[metric])
                         else:
-                            x_[i] += delta / 2
-                            x_[j] -= delta / 2
-                        adjusted.append(j)
-                        no_changes = False
-            if no_changes:
-                break
+                            x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
+                        y.append(np.max(np.mean(data[env][userun][mode][algo])))
+                        pos = np.argmax(np.mean(data[env][userun][mode][algo]))
+                        sd.append(np.std(data[env][userun][mode][algo][pos]))
 
-        # position text
-        _, _, ymin, ymax = ax.axis()
-        ax.set_ylim(ymin - (ymax - ymin) * 0.08, ymax)
-        for m, x in enumerate(x_):
-            ax.text(x, ymin - (ymax - ymin)*0.05, annotations[m], ha="center")
+                    x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
 
-        # Online Policy
-        csv = data[env]["online"]["DQN"]
-        ax.axhline(y=csv[0], color="black", label=("Online" if e==0 else None))
+                    cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
+                    ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
+                    ax.plot(x, y, "o-", label=(algo if e == 1 else None), color=f"C{a}")
+                except:
+                    continue
+
+            x, y = [], []
+            for mode in modes:
+                if metric == 1 or metric == 2:
+                    x.append(mm.get_data(env, mode, userun)[metric])
+                else:
+                    x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
+                y.append(mm.get_data(env, mode, userun)[0][0])
+            x, y = [list(tuple) for tuple in zip(*sorted(zip(x, y)))]
+
+            ax.plot(x, y, "o:", label=("Behav." if e==0 else None), color="black")
+
+            xmax, xmin, x_ = 0, 9e9, []
+            for m, mode in enumerate(modes):
+                if metric == 1 or metric == 2:
+                    x = mm.get_data(env, mode, userun)[metric]
+                else:
+                    x = mm.get_data(env, mode, userun)[metric[0]][metric[1]]
+                xmin = x if x < xmin else xmin
+                xmax = x if x > xmax else xmax
+                x_.append(x)
+
+            # adjust markings if they overlap! do multiple times to be sure
+            for _ in range(10):
+                adjusted, no_changes = [], True
+                for i in range(len(x_)):
+                    for j in range(len(x_)):
+                        if i != j and i not in adjusted and abs(x_[i] - x_[j]) < 0.08 * (xmax - xmin):
+                            delta = 0.08 * (xmax - xmin) - abs(x_[i] - x_[j])
+                            if x_[i] < x_[j]:
+                                x_[i] -= delta / 2
+                                x_[j] += delta / 2
+                            else:
+                                x_[i] += delta / 2
+                                x_[j] -= delta / 2
+                            adjusted.append(j)
+                            no_changes = False
+                if no_changes:
+                    break
+
+            # position text
+            _, _, ymin, ymax = ax.axis()
+            ax.set_ylim(ymin - (ymax - ymin) * 0.08, ymax)
+            for m, x in enumerate(x_):
+                ax.text(x, ymin - (ymax - ymin)*0.05, annotations[m], ha="center")
+
+            # Online Policy
+            csv = data[env][userun]["online"]["DQN"]
+            ax.axhline(y=csv[0], color="black", label=("Online" if e==0 else None))
 
 
-    f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
-    f.tight_layout(rect=(0.008, 0.022, 1, 0.95))
-    f.text(0.52, 0.01, metrics[metric], ha='center', fontsize="large")
-    f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-    plt.savefig(os.path.join(outdir, metrics[metric] + "." + image_type))
-    plt.close()
-"""
+        f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
+        f.tight_layout(rect=(0.008, 0.022, 1, 0.95))
+        f.text(0.52, 0.01, metrics[metric], ha='center', fontsize="large")
+        f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
+        plt.savefig(os.path.join(outdir, metrics[metric] + f"_userun{userun}." + image_type))
+        plt.close()
+
+### buffertypes per userun
 
 for userun in range(1, useruns + 1):
     # plot for modes
@@ -546,7 +748,7 @@ for userun in range(1, useruns + 1):
             y.append(mm.get_data(env, mode, userun)[0][0])
         x, y = [list(tuple) for tuple in zip(*sorted(zip(x, y)))]
 
-        ax.plot(x, y, "o-", linestyle="dotted", label=("Behav." if e == 0 else None), color="black")
+        ax.plot(x, y, "o:", label=("Behav." if e == 0 else None), color="black")
 
         # Online Policy
         csv = data[env][userun]["online"]["DQN"]
@@ -586,49 +788,3 @@ for userun in range(1, useruns + 1):
     f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
     plt.savefig(os.path.join(outdir, f"buffertypes_userun{userun}." + image_type))
     plt.close()
-
-
-"""
-### for entropy
-
-f = plt.figure(figsize=(6.2, 6))
-
-plt.hlines(y=1, xmin=-0.05, xmax=1, color="silver")
-plt.vlines(x=1, ymin=-0.05, ymax=1, color="silver")
-
-plt.ylim(-0.05, 1.5)
-plt.xlim(-0.05, 1.3)
-
-tq, sac, en = [], [], []
-
-for env in envs:
-
-    online_return = data[env]["online"]["DQN"][0]
-    random_return = mm.get_data(env, "random")[0][0]
-    online_usap = mm.get_data(env, "er")[2]
-
-    x, y, performance = [], [], []
-    for m, mode in enumerate(modes):
-        x.append(mm.get_data(env, mode)[2] / online_usap)
-        y.append( (mm.get_data(env, mode)[0][0] - random_return) / (online_return - random_return))
-        performance.append(mm.get_data(env, mode)[3][0])
-
-    tq.extend(y)
-    sac.extend(x)
-    en.extend(performance)
-
-    plt.scatter(x, y, s = 100, c=performance, cmap="Greens", zorder=10)
-
-    for i in range(len(performance)):
-        plt.annotate(f"{(performance[i]):.2f}", (x[i] + offset_ann, y[i] + offset_ann), fontsize="x-small", zorder=20)
-
-
-f.tight_layout(rect=(0.04, 0.04, 1, 1))
-f.text(0.54, 0.01, x_label, ha='center', fontsize="large")
-f.text(0.01, 0.54, y_label, va='center', rotation='vertical', fontsize="large")
-plt.savefig(os.path.join(outdir, "entropy." + image_type))
-plt.close()
-
-print("r (TQ - E):", scipy.stats.pearsonr(tq, en))
-print("r (SAC - E):", scipy.stats.pearsonr(sac, en))
-"""
