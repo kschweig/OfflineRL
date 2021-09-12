@@ -16,13 +16,18 @@ sns.set()
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
-folder="main_figures"
+"""
+folder = "main_figures_paper"
+image_type = "pdf"
+"""
+folder = "main_figures"
 image_type = "png"
 
 figsize = (12, 6)
 figsize_legend = (12, 1)
 figsize_half = (12, 3.5)
-figsize_half_half = (8, 4)
+figsize_half_half = (9, 4)
+figsize_small_avg = (9, 3.2)
 figsize_small = (16, 3)
 figsize_comp = (12, 6)
 figsize_envs = (12, 7.2)
@@ -51,12 +56,8 @@ envs = {'CartPole-v1': 0, 'MountainCar-v0': 1, "MiniGrid-LavaGapS7-v0": 2, "Mini
 
 algos = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 
-buffer = {"random": "Random Policy", "mixed": "Mixed Policy", "er": "Experience Replay",
-          "noisy": "Noisy Policy", "fully": "Final Policy"}
-
-metrics = {(0,0):"Return (dataset)", 2:"Unique State-Action Pairs", (3,0):"Entropy"}
-
-annotations = ["(R)", "(M)", "(E)", "(N)", "(F)"]
+buffer = {"random": "Random", "mixed": "Mixed", "er": "Replay",
+          "noisy": "Noisy", "fully": "Expert"}
 
 
 def plt_csv(ax, csv, algo, mode, ylims=None, set_title=True, color=None, set_label=True):
@@ -120,61 +121,6 @@ os.makedirs(outdir, exist_ok=True)
 # titles
 x_label = "Dataset"
 
-# dataset overview
-
-f, axs = plt.subplots(1, 3, figsize=figsize_half, sharex=True)
-for m, metric in enumerate([(0, 0), 2, (3, 0)]):
-    for e, env in enumerate(envs):
-        x_all = []
-        for mode in modes:
-            x = []
-            for userun in range(1, useruns + 1):
-                random_return = mm.get_data(env, "random", userun)[0][0]
-                online_usap = mm.get_data(env, "er", userun)[2]
-
-                if m == 1:
-                    result = mm.get_data(env, mode, userun)[metric]
-                else:
-                    result = mm.get_data(env, mode, userun)[metric[0]][metric[1]]
-
-                if m == 0:
-                    csv = data[env][userun]["online"]["DQN"]
-                    x.append((result - random_return) / (np.max(csv) - random_return))
-                elif m == 1:
-                    x.append(result / online_usap)
-                else:
-                    x.append(result)
-            x_all.append(x)
-
-        x = np.asarray(x_all)
-        est = np.mean(x, axis=1)
-        sd = np.std(x, axis=1)
-        cis = (est - sd, est + sd)
-
-        axs[m].fill_between(range(len(x)), cis[0], cis[1], alpha=0.2)
-
-        axs[m].plot(range(len(est)), est, "o",
-                    label = "-".join(env.split("-")[:-1]) if m == 0 else None, zorder=20)
-
-    if m == 0:
-        axs[m].set_ylabel("Relative Trajectory Quality")
-        axs[m].axhline(y=1, color="silver")
-    elif m == 1:
-        axs[m].set_ylabel("Relative State-Action Coverage")
-        axs[m].axhline(y=1, color="silver")
-    else:
-        axs[m].set_ylabel(metrics[metric])
-
-    axs[m].set_ylim(bottom=-0.05, top=1.45)
-    axs[m].set_xticks(range(len(modes)))
-    axs[m].set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
-axs[-1].set_ylim(bottom=-0.05, top=1.05)
-f.legend(loc="upper center", ncol=len(env), fontsize="small")
-f.tight_layout(rect=(0, 0.022, 1, 0.92))
-f.text(0.52, 0.01, x_label, ha='center')
-plt.savefig(os.path.join(outdir, f"overview_3_line." + image_type))
-plt.close()
-
 # compact representation averaged over envs
 f, axs = plt.subplots(1, 3, figsize=figsize_half, sharex=True)
 for m, metric in enumerate([(0, 0), 2, (3, 0)]):
@@ -214,16 +160,63 @@ for m, metric in enumerate([(0, 0), 2, (3, 0)]):
     elif m == 1:
         axs[m].set_ylabel("Relative State-Action Coverage")
         axs[m].axhline(y=1, color="silver")
-    else:
-        axs[m].set_ylabel(metrics[metric])
+    elif m == 2:
+        axs[m].set_ylabel("Entropy")
 
     axs[m].set_ylim(bottom=-0.05, top=1.45)
     axs[m].set_xticks([i for i in range(len(modes))])
-    axs[m].set_xticklabels([buffer[m] for m in modes],fontsize="x-small", rotation=15, rotation_mode="anchor")
+    axs[m].set_xticklabels([buffer[m] for m in modes],fontsize="small")#, rotation=15, rotation_mode="anchor")
 axs[-1].set_ylim(bottom=-0.05, top=1.05)
 f.tight_layout(rect=(0, 0.022, 1, 1))
 f.text(0.52, 0.01, x_label, ha='center')
 plt.savefig(os.path.join(outdir, f"overview_3_avg." + image_type))
+plt.close()
+
+# compact representation averaged over envs
+f, axs = plt.subplots(1, 2, figsize=figsize_small_avg, sharex=True)
+for m, metric in enumerate([(0, 0), 2]):
+    x_all = []
+    for mode in modes:
+        x = []
+        for e, env in enumerate(envs):
+            for userun in range(1, useruns + 1):
+                random_return = mm.get_data(env, "random", userun)[0][0]
+                online_usap = mm.get_data(env, "er", userun)[2]
+
+                if m == 1:
+                    result = mm.get_data(env, mode, userun)[metric]
+                else:
+                    result = mm.get_data(env, mode, userun)[metric[0]][metric[1]]
+
+                if m == 0:
+                    csv = data[env][userun]["online"]["DQN"]
+                    x.append((result - random_return) / (np.max(csv) - random_return))
+                elif m == 1:
+                    x.append(result / online_usap)
+
+        x_all.append(x)
+
+    axs[m].boxplot(x_all, positions=range(len(modes)), zorder=20,
+                   medianprops={"c": f"C{0}", "linewidth": 1.5},
+                   boxprops={"c": f"C{0}", "linewidth": 1.5},
+                   whiskerprops={"c": f"C{0}", "linewidth": 1.5},
+                   capprops={"c": f"C{0}", "linewidth": 1.5},
+                   flierprops={"markeredgecolor": f"C{0}"})#, "markeredgewidth": 1.5})
+
+    if m == 0:
+        axs[m].set_ylabel("Relative Trajectory Quality")
+        axs[m].axhline(y=1, color="silver")
+    elif m == 1:
+        axs[m].set_ylabel("Relative State-Action Coverage")
+        axs[m].axhline(y=1, color="silver")
+
+    axs[m].set_ylim(bottom=-0.05, top=1.45)
+    axs[m].set_xticks([i for i in range(len(modes))])
+    axs[m].set_xticklabels([buffer[m] for m in modes],fontsize="small")#, rotation=15, rotation_mode="anchor")
+
+f.tight_layout(rect=(0, 0.022, 1, 1))
+f.text(0.52, 0.01, x_label, ha='center')
+plt.savefig(os.path.join(outdir, f"overview_2_avg." + image_type))
 plt.close()
 
 
@@ -267,14 +260,17 @@ for m, metric in enumerate([(0, 0), 2, (3, 0)]):
     elif m == 1:
         axs[m].set_ylabel("Relative State-Action Coverage")
         axs[m].axhline(y=1, color="silver")
-    else:
-        axs[m].set_ylabel(metrics[metric])
+    elif m == 2:
+        axs[m].set_ylabel("Entropy")
 
     axs[m].set_ylim(bottom=-0.05, top=1.45)
     axs[m].set_xticks([i for i in range(len(modes) + 1)])
     names = [buffer[m] for m in modes]
     names.append("")
-    axs[m].set_xticklabels(names,fontsize="x-small", rotation=15, rotation_mode="anchor")
+    axs[m].set_xticklabels(names,fontsize="small")#, rotation=15, rotation_mode="anchor")
+    offset = matplotlib.transforms.ScaledTranslation(0.29, 0, f.dpi_scale_trans)
+    for label in axs[m].xaxis.get_majorticklabels():
+        label.set_transform(label.get_transform() + offset)
 axs[-1].set_ylim(bottom=-0.05, top=1.05)
 labels = [mpatches.Patch(color=f"C{e_}", fill=False, linewidth=1.5, label="-".join(env_.split("-")[:-1])) for e_, env_ in enumerate(envs)]
 f.legend(handles=labels, handlelength=1, loc="upper center", ncol=len(envs), fontsize="small")
@@ -330,7 +326,10 @@ for m, metric in enumerate([(0, 0), 2]):
     axs[m].set_xticks([i for i in range(len(modes) + 1)])
     names = [buffer[m] for m in modes]
     names.append("")
-    axs[m].set_xticklabels(names, fontsize="x-small", rotation=15, rotation_mode="anchor")
+    axs[m].set_xticklabels(names, fontsize="small")#, rotation=15, rotation_mode="anchor")
+    offset = matplotlib.transforms.ScaledTranslation(0.33, 0, f.dpi_scale_trans)
+    for label in axs[m].xaxis.get_majorticklabels():
+        label.set_transform(label.get_transform() + offset)
 
 labels = [mpatches.Patch(color=f"C{e_}", fill=False, linewidth=1.5, label="-".join(env_.split("-")[:-1])) for e_, env_ in enumerate(envs)]
 f.legend(handles=labels, handlelength=1, loc="upper center", ncol=len(envs)//2, fontsize="small")
@@ -643,94 +642,6 @@ os.makedirs(outdir, exist_ok=True)
 y_label = "Maximum Average Return"
 x_label = "Dataset"
 
-for userun in range(1, useruns + 1):
-    for metric in metrics.keys():
-
-        f, axs = plt.subplots(2, 3, figsize=figsize_comp, sharex=(metrics[metric] == "Entropy"))
-        axs = [item for sublist in zip(axs[0], axs[1]) for item in sublist]
-
-        for e, env in enumerate(envs):
-
-            ax = axs[e]
-            ax.set_title(env[:-3])
-
-            for a, algo in enumerate(algos):
-                try:
-                    x, y, sd = [], [], []
-                    for mode in modes:
-                        if metric == 1 or metric == 2:
-                            x.append(mm.get_data(env, mode, userun)[metric])
-                        else:
-                            x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
-                        y.append(np.max(np.mean(data[env][userun][mode][algo])))
-                        pos = np.argmax(np.mean(data[env][userun][mode][algo]))
-                        sd.append(np.std(data[env][userun][mode][algo][pos]))
-
-                    x, y, sd = [list(tuple) for tuple in zip(*sorted(zip(x, y, sd)))]
-
-                    cis = (np.asarray(y) - np.asarray(sd), np.asarray(y) + np.asarray(sd))
-                    ax.fill_between(x, cis[0], cis[1], alpha=0.2, color=f"C{a}")
-                    ax.plot(x, y, "o-", label=(algo if e == 1 else None), color=f"C{a}")
-                except:
-                    continue
-
-            x, y = [], []
-            for mode in modes:
-                if metric == 1 or metric == 2:
-                    x.append(mm.get_data(env, mode, userun)[metric])
-                else:
-                    x.append(mm.get_data(env, mode, userun)[metric[0]][metric[1]])
-                y.append(mm.get_data(env, mode, userun)[0][0])
-            x, y = [list(tuple) for tuple in zip(*sorted(zip(x, y)))]
-
-            ax.plot(x, y, "o:", label=("Behav." if e==0 else None), color="black")
-
-            xmax, xmin, x_ = 0, 9e9, []
-            for m, mode in enumerate(modes):
-                if metric == 1 or metric == 2:
-                    x = mm.get_data(env, mode, userun)[metric]
-                else:
-                    x = mm.get_data(env, mode, userun)[metric[0]][metric[1]]
-                xmin = x if x < xmin else xmin
-                xmax = x if x > xmax else xmax
-                x_.append(x)
-
-            # adjust markings if they overlap! do multiple times to be sure
-            for _ in range(10):
-                adjusted, no_changes = [], True
-                for i in range(len(x_)):
-                    for j in range(len(x_)):
-                        if i != j and i not in adjusted and abs(x_[i] - x_[j]) < 0.08 * (xmax - xmin):
-                            delta = 0.08 * (xmax - xmin) - abs(x_[i] - x_[j])
-                            if x_[i] < x_[j]:
-                                x_[i] -= delta / 2
-                                x_[j] += delta / 2
-                            else:
-                                x_[i] += delta / 2
-                                x_[j] -= delta / 2
-                            adjusted.append(j)
-                            no_changes = False
-                if no_changes:
-                    break
-
-            # position text
-            _, _, ymin, ymax = ax.axis()
-            ax.set_ylim(ymin - (ymax - ymin) * 0.08, ymax)
-            for m, x in enumerate(x_):
-                ax.text(x, ymin - (ymax - ymin)*0.05, annotations[m], ha="center")
-
-            # Online Policy
-            csv = data[env][userun]["online"]["DQN"]
-            ax.axhline(y=csv[0], color="black", label=("Online" if e==0 else None))
-
-
-        f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
-        f.tight_layout(rect=(0.008, 0.022, 1, 0.95))
-        f.text(0.52, 0.01, metrics[metric], ha='center', fontsize="large")
-        f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
-        plt.savefig(os.path.join(outdir, metrics[metric] + f"_userun{userun}." + image_type))
-        plt.close()
-
 ### buffertypes per userun
 
 for userun in range(1, useruns + 1):
@@ -780,7 +691,7 @@ for userun in range(1, useruns + 1):
             x.append(m)
 
         ax.set_xticks(range(len(modes)))
-        ax.set_xticklabels([buffer[m] for m in modes], fontsize="x-small", rotation=15, rotation_mode="anchor")
+        ax.set_xticklabels([buffer[m] for m in modes], fontsize="small")#, rotation=15, rotation_mode="anchor")
 
     f.legend(loc="upper center", ncol=len(algos) + 2, fontsize="small")
     f.tight_layout(rect=(0.008, 0.022, 1, 0.95))
