@@ -16,17 +16,18 @@ sns.set()
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
-"""
+
 folder = "main_figures_paper"
 image_type = "pdf"
 """
 folder = "main_figures"
 image_type = "png"
+"""
 
 figsize = (12, 6)
 figsize_legend = (12, 1)
 figsize_half = (12, 3.5)
-figsize_half_half = (9, 4)
+figsize_half_half = (9.25, 3.5)
 figsize_small_avg = (9, 3.2)
 figsize_small = (16, 3)
 figsize_comp = (12, 6)
@@ -56,8 +57,10 @@ envs = {'CartPole-v1': 0, 'MountainCar-v0': 1, "MiniGrid-LavaGapS7-v0": 2, "Mini
 
 algos = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 
-buffer = {"random": "Random", "mixed": "Mixed", "er": "Replay",
-          "noisy": "Noisy", "fully": "Expert"}
+buffer = {"random": "Random", "mixed": "Mixed", "er": "Replay", "noisy": "Noisy", "fully": "Expert"}
+
+mc_actions = ["Acc. to the Left", "Don't accelerate", "Acc. to the Right"]
+
 
 
 def plt_csv(ax, csv, algo, mode, ylims=None, set_title=True, color=None, set_label=True):
@@ -332,8 +335,8 @@ for m, metric in enumerate([(0, 0), 2]):
         label.set_transform(label.get_transform() + offset)
 
 labels = [mpatches.Patch(color=f"C{e_}", fill=False, linewidth=1.5, label="-".join(env_.split("-")[:-1])) for e_, env_ in enumerate(envs)]
-f.legend(handles=labels, handlelength=1, loc="upper center", ncol=len(envs)//2, fontsize="small")
-f.tight_layout(rect=(0, 0.022, 1, 0.88))
+f.legend(handles=labels, handlelength=1, loc="upper center", ncol=len(envs), fontsize="x-small")
+f.tight_layout(rect=(0, 0.022, 1, 0.92))
 f.text(0.52, 0.01, x_label, ha='center')
 plt.savefig(os.path.join(outdir, f"overview_2." + image_type))
 plt.close()
@@ -699,3 +702,37 @@ for userun in range(1, useruns + 1):
     f.text(0.005, 0.5, y_label, va='center', rotation='vertical', fontsize="large")
     plt.savefig(os.path.join(outdir, f"buffertypes_userun{userun}." + image_type))
     plt.close()
+
+
+
+### MountainCar
+outdir = os.path.join("..", "..", "results", folder, "mountainCar")
+os.makedirs(outdir, exist_ok=True)
+
+samples = 10000
+
+np.random.seed(42)
+ind = np.random.choice(10**5, (samples, ), replace=False)
+
+f, axs = plt.subplots(5, 5, figsize=figsize_theplot, sharex=True, sharey=True)
+axs = [item for sublist in zip(axs[0], axs[1], axs[2], axs[3], axs[4]) for item in sublist]
+
+for m, bt in enumerate(buffer):
+    for userun in range(1, useruns + 1):
+        ax = axs[m*5 + userun - 1]
+        # load saved buffer
+        with open(os.path.join("..", "..", "data", f"ex2", f"MountainCar-v0_run{userun}_{bt}.pkl"), "rb") as file:
+            data = pickle.load(file)
+            if userun == 1:
+                ax.set_title(buffer[bt])
+            ax.scatter(data.state[ind, 0], data.state[ind, 1], c=[f"C{a}" for a in data.action[ind, 0]], s=0.5)
+            ax.text(0.02, 0.92, f"Run {userun}", fontsize="small", transform=ax.transAxes)
+
+f.tight_layout(rect=(0.022, 0.022, 1, 0.97))
+labels = [mpatches.Patch(color=f"C{a}", fill=True, linewidth=1, label=mc_actions[a]) for a in range(3)]
+f.legend(handles=labels, handlelength=1, loc="upper right", ncol=3, fontsize="small")
+f.text(0.53, 0.98, "Dataset", ha='center', fontsize="large")
+f.text(0.53, 0.01, "Position in m", ha='center', fontsize="large")
+f.text(0.005, 0.5, "Velocity in m/s", va='center', rotation='vertical', fontsize="large")
+plt.savefig(os.path.join(outdir, f"mountaincar.png"))
+plt.close()
