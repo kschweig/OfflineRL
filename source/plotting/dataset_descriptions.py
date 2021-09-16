@@ -7,6 +7,9 @@ import numpy as np
 
 buffer = {"random": "Random", "mixed": "Mixed", "er": "Replay",
           "noisy": "Noisy", "fully": "Expert"}
+modes = list(buffer.keys())
+
+algos = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 
 envs = {'CartPole-v1': 0, 'MountainCar-v0': 1, "MiniGrid-LavaGapS7-v0": 2, "MiniGrid-Dynamic-Obstacles-8x8-v0": 3,
         'Breakout-MinAtar-v0': 4, "SpaceInvaders-MinAtar-v0": 5}
@@ -39,15 +42,16 @@ for env in envs:
             returns.append(mm.get_data(env, b, userun + 1)[2])
         #print("\t".join([f"${ret:.2f}$" for ret in returns]))
         print("\t".join([f"${ret:,}$".replace(",", "\,") for ret in returns]))
-"""
 
 for env in envs:
     returns = []
     for userun in range(useruns):
         returns.append(mm.get_data(env, "random", userun+1)[0][0])
     print("\t".join([f"${ret:.2f}$" for ret in returns]))
-
 """
+
+
+
 ## get data
 indir = os.path.join("..", "..", "results", "csv_per_userun", "return")
 
@@ -83,7 +87,7 @@ for file in files:
     data[env][userun][mode][algo] = csv
 
 
-
+"""
 ### maximum online policy
 for env in envs:
     returns = []
@@ -99,3 +103,69 @@ for env in envs:
     print(env, "\t".join([f"${ret:.2f}$" for ret in returns]))
 """
 
+print("\\begin{table}[]\n \centering \n \\begin{tabular}{lccccccccc} \hline")
+print("Dataset", "\t & \t", "\t & \t".join(algos), "\t \\\\")
+
+for env in list(envs.keys())[:4]:
+    print("\hline \multicolumn{10}{c}{" + env + "} \\\\ ")
+    for m, mode in enumerate(modes):
+        performance = []
+        for algo in algos:
+
+            p = []
+            for userun in range(1, useruns + 1):
+                online_return = np.max(data[env][userun]["online"]["DQN"])
+                random_return = mm.get_data(env, "random", userun)[0][0]
+
+                try:
+                    p.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) /
+                                       (online_return - random_return))
+                except:
+                    break
+
+            if p != []:
+                performance.append((np.mean(p), np.std(p)))
+        if performance != []:
+            p_ = []
+            for_std = np.argmax(np.asarray(performance)[:, 0])
+            for mean, std in performance:
+                if round(mean, 2) >= round(np.max(np.asarray(performance)[:, 0]), 2) - max(round(np.asarray(performance)[for_std, 1], 2), 0.05):
+                    p_.append("\\begin{tabular}[c]{@{}c@{}}$\mathbf{" + f"{mean:.2f}" + "}" + f" $ \\\\ $\pm {std:.2f}$" + "\end{tabular}")
+                else:
+                    p_.append("\\begin{tabular}[c]{@{}c@{}}" + f"${mean:.2f} $ \\\\ $\pm {std:.2f}$" + "\end{tabular}")
+            print(buffer[mode], "\t & \t", "\t & \t".join(p_), "\t \\\\")
+print("\hline\n\end{tabular}\n\end{table}")
+
+print("\n" * 3)
+
+print("\\begin{table}[] \n \centering \n \\begin{tabular}{lcccc} \hline")
+print("Dataset", "\t & \t", "\t & \t".join(["BC", "DQN", "BCQ", "CQL"]), "\t \\\\")
+
+for env in list(envs.keys())[4:]:
+    print("\hline \multicolumn{5}{c}{" + env + "} \\\\ ")
+    for m, mode in enumerate(modes):
+        performance = []
+        for algo in algos:
+
+            p = []
+            for userun in range(1, useruns + 1):
+                online_return = np.max(data[env][userun]["online"]["DQN"])
+                random_return = mm.get_data(env, "random", userun)[0][0]
+
+                try:
+                    p.append((np.max(np.mean(data[env][userun][mode][algo], axis=1)) - random_return) /
+                                       (online_return - random_return))
+                except:
+                    break
+            if p != []:
+                performance.append((np.mean(p), np.std(p)))
+        if performance != []:
+            p_ = []
+            for_std = np.argmax(np.asarray(performance)[:, 0])
+            for mean, std in performance:
+                if round(mean, 2) >= round(np.max(np.asarray(performance)[:, 0]), 2) - max(round(np.asarray(performance)[for_std, 1], 2), 0.05):
+                    p_.append("$\mathbf{" + f"{mean:.2f}" + "}" + f" \pm {std:.2f}$")
+                else:
+                    p_.append(f"${mean:.2f} \pm {std:.2f}$")
+            print(buffer[mode], "\t & \t", "\t & \t".join(p_), "\t \\\\")
+print("\hline\n\end{tabular}\n\end{table}")
