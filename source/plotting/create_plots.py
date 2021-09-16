@@ -151,11 +151,11 @@ for m, metric in enumerate([(0, 0), 2, (3, 0)]):
         x_all.append(x)
 
     axs[m].boxplot(x_all, positions=range(len(modes)), zorder=20,
-                   medianprops={"c": f"C{0}", "linewidth": 1.5},
-                   boxprops={"c": f"C{0}", "linewidth": 1.5},
-                   whiskerprops={"c": f"C{0}", "linewidth": 1.5},
-                   capprops={"c": f"C{0}", "linewidth": 1.5},
-                   flierprops={"markeredgecolor": f"C{0}"})#, "markeredgewidth": 1.5})
+                   medianprops={"c": f"darkcyan", "linewidth": 1.5},
+                   boxprops={"c": f"darkcyan", "linewidth": 1.5},
+                   whiskerprops={"c": f"darkcyan", "linewidth": 1.5},
+                   capprops={"c": f"darkcyan", "linewidth": 1.5},
+                   flierprops={"markeredgecolor": f"darkcyan"})#, "markeredgewidth": 1.5})
 
     if m == 0:
         axs[m].set_ylabel("Relative Trajectory Quality")
@@ -200,11 +200,11 @@ for m, metric in enumerate([(0, 0), 2]):
         x_all.append(x)
 
     axs[m].boxplot(x_all, positions=range(len(modes)), zorder=20,
-                   medianprops={"c": f"C{0}", "linewidth": 1.5},
-                   boxprops={"c": f"C{0}", "linewidth": 1.5},
-                   whiskerprops={"c": f"C{0}", "linewidth": 1.5},
-                   capprops={"c": f"C{0}", "linewidth": 1.5},
-                   flierprops={"markeredgecolor": f"C{0}"})#, "markeredgewidth": 1.5})
+                   medianprops={"c": "darkcyan", "linewidth": 1.5},
+                   boxprops={"c": "darkcyan", "linewidth": 1.5},
+                   whiskerprops={"c": "darkcyan", "linewidth": 1.5},
+                   capprops={"c": "darkcyan", "linewidth": 1.5},
+                   flierprops={"markeredgecolor": "darkcyan"})#, "markeredgewidth": 1.5})
 
     if m == 0:
         axs[m].set_ylabel("Relative Trajectory Quality")
@@ -350,12 +350,12 @@ outdir = os.path.join("..", "..", "results", folder, "tq_vs_sac")
 os.makedirs(outdir, exist_ok=True)
 
 from  matplotlib.colors import LinearSegmentedColormap
-c = ["red", "tomato", "lightsalmon", "wheat", "palegreen", "limegreen", "green"]
+c = ["seagreen", "darkcyan", ""]#["red", "tomato", "lightsalmon", "wheat", "palegreen", "limegreen", "green"]
 v = [i / (len(c) - 1) for i in range(len(c))]
 print(v)
 l = list(zip(v, c))
-cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
-normalize = Normalize(vmin=0, vmax=120, clip=True)
+cmap = "viridis"#LinearSegmentedColormap.from_list('grnylw',l, N=256)
+normalize = Normalize(vmin=0, vmax=100, clip=True)
 
 offset_ann = 0.025
 
@@ -420,7 +420,7 @@ for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
         print("-" * 30)
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 1))
     f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
@@ -473,7 +473,7 @@ for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
             performance_.extend(np.mean(np.asarray(performance).reshape(useruns, -1), axis=0).tolist())
 
 
-        ax.scatter(x_, y_, s = 100, c=performance_, cmap=cmap, norm=normalize, zorder=10)
+        ax.scatter(x_, y_, s = 140, c=performance_, cmap=cmap, norm=normalize, zorder=10)
 
         """
         for i in range(len(performance_)):
@@ -490,7 +490,7 @@ for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
         print("-" * 30)
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 1))
     f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
@@ -553,7 +553,7 @@ for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD
         """
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 0.96))
     f.text(0.5, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
@@ -617,7 +617,7 @@ for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD
         """
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5, label="Performance in %")
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 0.96))
     f.text(0.5, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
@@ -709,6 +709,8 @@ for userun in range(1, useruns + 1):
 outdir = os.path.join("..", "..", "results", folder, "mountainCar")
 os.makedirs(outdir, exist_ok=True)
 
+colors=["#39568CFF", "#ffcf20FF", "#29AF7FFF"]
+
 samples = 10000
 
 np.random.seed(42)
@@ -725,11 +727,11 @@ for m, bt in enumerate(buffer):
             data = pickle.load(file)
             if userun == 1:
                 ax.set_title(buffer[bt])
-            ax.scatter(data.state[ind, 0], data.state[ind, 1], c=[f"C{a}" for a in data.action[ind, 0]], s=0.5)
+            ax.scatter(data.state[ind, 0], data.state[ind, 1], c=[colors[a] for a in data.action[ind, 0]], s=0.5)
             ax.text(0.02, 0.92, f"Run {userun}", fontsize="small", transform=ax.transAxes)
 
 f.tight_layout(rect=(0.022, 0.022, 1, 0.97))
-labels = [mpatches.Patch(color=f"C{a}", fill=True, linewidth=1, label=mc_actions[a]) for a in range(3)]
+labels = [mpatches.Patch(color=colors[a], fill=True, linewidth=1, label=mc_actions[a]) for a in range(3)]
 f.legend(handles=labels, handlelength=1, loc="upper right", ncol=3, fontsize="small")
 f.text(0.53, 0.98, "Dataset", ha='center', fontsize="large")
 f.text(0.53, 0.01, "Position in m", ha='center', fontsize="large")
