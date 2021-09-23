@@ -350,18 +350,18 @@ outdir = os.path.join("..", "..", "results", folder, "tq_vs_sac")
 os.makedirs(outdir, exist_ok=True)
 
 from  matplotlib.colors import LinearSegmentedColormap
-c = ["seagreen", "darkcyan", ""]#["red", "tomato", "lightsalmon", "wheat", "palegreen", "limegreen", "green"]
-v = [i / (len(c) - 1) for i in range(len(c))]
-print(v)
-l = list(zip(v, c))
-cmap = "viridis"#LinearSegmentedColormap.from_list('grnylw',l, N=256)
-normalize = Normalize(vmin=0, vmax=100, clip=True)
+#c = ["seagreen", "darkcyan", ""]#["red", "tomato", "lightsalmon", "wheat", "palegreen", "limegreen", "green"]
+#v = [i / (len(c) - 1) for i in range(len(c))]
+#print(v)
+#l = list(zip(v, c))
+cmap = "viridis"  #LinearSegmentedColormap.from_list('grnylw',l, N=256)
+normalize = Normalize(vmin=0, vmax=120, clip=True)
 
 offset_ann = 0.025
 
 # titles
-x_label = r"Relative $\bf{{State}{-}{Action} \; Coverage}$ to Online Policy"
-y_label = r"Relative $\bf{Trajectory \; Quality}$ to Online Policy"
+x_label = r"Relative $\bf{{State}{-}{Action} \; Coverage}$ of Dataset"
+y_label = r"Relative $\bf{Trajectory \; Quality}$ of Dataset"
 
 # plot for discussion
 ### algos not averaged
@@ -404,7 +404,7 @@ for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
                     except:
                         continue
 
-        ax.scatter(x, y, s = 100, c=performance, cmap=cmap, norm=normalize, zorder=10)
+        ax.scatter(x, y, s = 70, c=performance, cmap=cmap, norm=normalize, zorder=10)
 
         """
         for i in range(len(performance)):
@@ -420,7 +420,7 @@ for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
         print("-" * 30)
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of Online Policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 1))
     f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
@@ -490,7 +490,7 @@ for t, environments in enumerate([list(envs), list(envs)[:4], list(envs)[4:]]):
         print("-" * 30)
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of Online Policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 1))
     f.text(0.5, 0.01, x_label, ha='center', fontsize="large")
@@ -553,7 +553,7 @@ for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD
         """
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of Online Policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 0.96))
     f.text(0.5, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
@@ -617,7 +617,7 @@ for method in ["Mean", "Maximum", "Minimum", "Median", "Mean + STD", "Mean - STD
         """
 
     f.colorbar(matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axs, anchor=(1.35, 0.55),
-               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of online policy", size=14)
+               shrink=0.5 if t < 2 else 0.5).set_label(label="Performance in % of Online Policy", size=14)
 
     f.tight_layout(rect=(0.022, 0.022, 0.92, 0.96))
     f.text(0.5, 0.96, f"{method} performance across algorithms", ha='center', fontsize="x-large")
