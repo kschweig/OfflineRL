@@ -343,7 +343,7 @@ plt.close()
 
 
 ###############
-# One plot to rule them all, one plot to find them, one plot to bring them all and in the darkness bind them
+# Main Results
 ###############
 
 outdir = os.path.join("..", "..", "results", folder, "tq_vs_sac")

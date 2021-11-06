@@ -14,7 +14,7 @@ import argparse
 env = "Breakout-MinAtar-v0"
 discount = 0.99
 buffer_types = ["random", "mixed", "er", "noisy", "fully"]
-agent_types = ["BC", "BVE", "MCE", "DQN", "QRDQN"]
+agent_types = ["BC", "BVE", "MCE", "DQN", "QRDQN", "REM", "BCQ", "CQL", "CRR"]
 multiple_useruns = 5
 # experiment parameters
 experiment = 5
