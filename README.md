@@ -13,6 +13,8 @@ Sepp Hochreiter<sup>1, 2</sup>_
 
 ---
 
+---
+
 # Implementation
 This repository contains implementations of BC, BVE, MCE, DQN, QR-DQN, REM, BCQ, CQL and CRR,
 used for our evaluation of Offline RL datasets.
@@ -50,9 +52,9 @@ python ex_XX.py
 
 Runtimes will be long, especially on MinAtar environments, which is why distribution across multiple machines is crucial in this step.
 To distribute across multiple machines, two further command line arguments are eligible, ```--run``` and ```--dataset```.
-Depending on how many runs have been done to create datasets for Offline RL, one can select one specific version of the dataset
+Depending on how many runs have been done to create datasets for Offline RL (five in the paper), one can select a specific version of the dataset
 with the first parameter.
-In this implementation, five different datasets are created (random, mixed, replay, noisy, expert), which can be selected
+For the results in the paper, five different datasets are created (random, mixed, replay, noisy, expert), which can be selected
 by its number using the second parameter.
 
 As an example, offline experiments using the fourth dataset creation run on the expert dataset is started with
@@ -67,20 +69,20 @@ or using the first dataset creation run on the replay dataset
 python ex_XX.py --run 0 --dataset 2
 ```
 ## Results
-After all six experiments are concluded, one can run
+After all experiments are concluded, one has to combine the logged files and create the plots by executing
 
 ```shell script
 python source/plotting/join_csv_files.py
 python source/plotting/create_plots.py
 ```
 
-Furthermore, plots for the training curves can be created by using
+Furthermore, plots for the training curves can be created by executing
 
 ```shell script
 python source/plotting/learning_curves.py
 ```
 
-and alternative visualisations of the main results by using parallel coordinates are available through
+Alternative visualisations of the main results, using parallel coordinates are available by executing
 
 ```shell script
 python source/plotting/parallel_coordinates.py
