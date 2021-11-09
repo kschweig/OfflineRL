@@ -9,7 +9,7 @@ Sepp Hochreiter<sup>1, 2</sup>_
 
 <sup>1</sup> ELLIS Unit Linz and LIT AI Lab, Institute for Machine Learning, Johannes Kepler University Linz, Austria  
 <sup>2</sup> Institute of Advanced Research in Artificial Intelligence (IARAI)  
-<sup>3</sup> Dynatrace Research, Austria
+<sup>3</sup> Dynatrace Research
 
 ---
 
