@@ -1,7 +1,7 @@
 # Understanding the Effects of Datasets Characteristics on Offline Reinforcement Learning
 _Kajetan Schweighofer<sup>1</sup>,
 Markus Hofmarcher<sup>1</sup>,
-Markus-Constantin Dinu<sup>1,3</sup>,
+Marius-Constantin Dinu<sup>1,3</sup>,
 Philipp Renz<sup>1</sup>,
 Angela Bitto-Nemling<sup>1</sup>,
 Vihang Patil<sup>1</sup>,
