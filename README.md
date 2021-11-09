@@ -13,6 +13,8 @@ Sepp Hochreiter<sup>1, 2</sup>_
 
 ---
 
+The paper is available on [arxiv](https://arxiv.org/abs/2111.04714)
+
 ---
 
 # Implementation
