@@ -20,11 +20,7 @@ folders = ["avd", "return"]
 ### join per userun
 
 for e, env in enumerate(envs):
-    if env in ["Breakout-MinAtar-v0", "SpaceInvaders-MinAtar-v0"]:
-        algos_ = ["BC", "DQN", "BCQ", "CQL"]
-    else:
-        algos_ = algos
-    for algo in tqdm(algos_, desc=f"{env}"):
+    for algo in tqdm(algos, desc=f"{env}"):
         for ds in datasets:
             for folder in folders:
                 for userun in range(useruns):

@@ -2,8 +2,10 @@ import numpy as np
 import gym
 import gym_minigrid
 import gym_minatar
+import copy
 from gym_minigrid.wrappers import FullyObsWrapper
-from .wrappers import FlatImgObsWrapper, RestrictMiniGridActionWrapper, MinAtarObsWrapper
+from .wrappers import FlatImgObsWrapper, RestrictMiniGridActionWrapper, MinAtarObsWrapper, MinAtarFlipWrapper, \
+    MinAtarShiftingWrapper, MinAtarHomomorphWrapper, MinAtarDistShiftWrapper
 from ..agents.dqn import DQN
 from ..agents.rem import REM
 from ..agents.qrdqn import QRDQN
@@ -43,11 +45,26 @@ def get_agent(agent_type, obs_space, num_actions, discount, lr, seed):
 
 
 def make_env(envid):
+    id = copy.copy(envid)
+    if "RotateShifted" in envid or "Homomorph" in envid or "DistShift" in envid:
+        envid = "Breakout-MinAtar-v0"
+
     env = gym.make(envid)
+
+
     if "MiniGrid" in envid:
         env = FlatImgObsWrapper(RestrictMiniGridActionWrapper(env))
-    if "MinAtar" in envid:
+    elif "MinAtar" in envid:
+        if "Rotate" in id:
+            env = MinAtarFlipWrapper(env)
+        elif "Homomorph" in id:
+            env = MinAtarHomomorphWrapper(env)
+        elif "DistShift" in id:
+            env = MinAtarDistShiftWrapper(env)
         env = MinAtarObsWrapper(env)
+        if "Shifted" in id:
+            env = MinAtarShiftingWrapper(env)
+
     return env
 
 

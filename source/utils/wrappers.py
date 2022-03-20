@@ -17,12 +17,45 @@ class MinAtarObsWrapper(gym.core.ObservationWrapper):
         )
 
     def observation(self, obs):
-        # division by 10 as the first dimension can hold up to 5 different colors
-        # and the second channel can hold up to 10 different objects
-        # -0.5 to center
         channels = obs.shape[2]
         obs = obs * np.arange(1, channels + 1)[None, None, :]
         return (np.max(obs, axis=2).flatten() / channels) - 0.5
+
+
+class MinAtarFlipWrapper(gym.core.ObservationWrapper):
+    def observation(self, obs):
+        return obs[::-1, ::-1]
+
+
+class MinAtarShiftingWrapper(gym.core.ObservationWrapper):
+    def observation(self, obs):
+        return obs + 0.5
+
+
+class MinAtarHomomorphWrapper(gym.core.ObservationWrapper):
+    def observation(self, obs):
+        ret_obs = np.zeros((obs.shape[0], obs.shape[1], obs.shape[2] + 2))
+        ret_obs[:, :, :self.game.env.channels['brick']] = obs[:, :, :self.game.env.channels['brick']]
+        ret_obs[1, :, self.game.env.channels['brick']] = self.game.env.brick_map[1]
+        ret_obs[2, :, self.game.env.channels['brick'] + 1] = self.game.env.brick_map[2]
+        ret_obs[3, :, self.game.env.channels['brick'] + 2] = self.game.env.brick_map[3]
+        return ret_obs
+
+
+class MinAtarDistShiftWrapper(gym.core.Wrapper):
+
+    def reset(self, **kwargs):
+        self.env.reset(**kwargs)
+        self.game.env.brick_map = np.zeros((10, 10))
+        self.game.env.brick_map[1, :] = 1
+        self.game.env.brick_map[3, :] = 1
+
+        return self.game.state()
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        return obs, reward, done, info
+
 
 
 class FlatImgObsWrapper(gym.core.ObservationWrapper):
