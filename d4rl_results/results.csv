@@ -1,0 +1,13 @@
+task;BC;SAC;BEAR;BRAC-p;BRAC-v;CQL
+halfcheetah-medium-replay ;38.4;-2.4;36.2;45.6;45.9;46.2
+hopper-medium-replay;11.3;1.9;10.8;-0.3;0.9;32.6
+walker2d-medium-replay;11.8;3.5;25.3;0.7;0.8;48.6
+halfcheetah-random ;2.1;30.5 ;25.5;23.5;28.1;35.4
+hopper-random;9.8 ;11.3 ;9.5 ;11.1;12.0 ;10.8
+walker2d-random ;1.6;4.1;6.7;0.8;0.5;7.0
+halfcheetah-medium ;36.1 ;-4.3 ;38.6 ;44.0;45.5 ;44.4
+walker2d-medium;6.6;0.9 ;33.2 ;72.7;81.3 ;79.2
+hopper-medium ;29.0;0.8;47.6;31.2;32.3 ;58.0
+halfcheetah-expert ;107.0 ;-1.9 ;108.2 ;3.8;-1.1 ;104.8
+hopper-expert ;109.0 ;0.7;110.3 ;6.6;3.7;109.9
+walker2d-expert;125.7;-0.3;106.1;-0.2;-0.0;153.9
