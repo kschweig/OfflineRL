@@ -6,14 +6,14 @@ date:   2022-07-25 12:00:00 +0200
 usemathjax: true
 ---
 
-This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). 5-10 min read.
+This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). This is a **5-10 min** read.
 
 The main contributions of this work are aligned along the question, **how algorithms in Offline Reinforcement Learning are influenced by the characteristics of the dataset in finding a good policy**. Those are:
 - Deriving theoretical measures that capture exploration and exploitation under a policy
 - Providing an effective method to characterise datasets through the empirical measures TQ and SACo
 - Conducting an extensive empirical evaluation on how dataset characteristics influence popular algorithms in Offline Reinforcement Learning
 
-## Introduction
+# Introduction
 
 The application of Reinforcement Learning (RL) in real world environments can be expensive or risky due to suboptimal policies during training.
 This may endanger humans through accidents inflicted by self-driving cars, crashes of production machines when optimising production processes, or high financial losses when applied in trading or pricing. 
@@ -28,7 +28,7 @@ Based on model-free off-policy algorithms, in particular DQN [(Mnih et al., 2013
 ![not found](/assets/overview_offpolicy_offline.svg){:width="100%"}
 {:refdef}
 
-## Datasets in Offline RL
+# Datasets in Offline RL
 
 While unified datasets have been released [(Gulcehre et al., 2020,][gulcehre_rlu] [Fu et al., 2021)][fu_d4rl] for comparisons of Offline RL algorithms, grounded work on understanding how dataset characteristics influence the performance of algorithms is still lacking [(Riedmiller et al., 2021)][riedmiller]. 
 The composition of the dataset not only limits the possible performance of any algorithm applied to it, its characteristics also have a large influence on the optimal hyperparameters of the algorithm. 
@@ -42,27 +42,29 @@ An example for this from our experiments can be seen in the following figure, bu
 While different behaviour can usually be judged and distinguished if displayed through a graphical user interface or visualisation techniques, it is notoriously hard to characterise through single measures. 
 
 {:refdef: style="text-align:center;"}
-![not found](/assets/random.png){:width="45%"}
-![not found](/assets/random.gif){:width="45%"}
+![not found](/assets/random.png){:width="30%"}
+![not found](/assets/random.gif){:width="35%"}
 {:refdef}
 {:refdef: style="text-align:center;"}
-![not found](/assets/expert.png){:width="45%"}
-![not found](/assets/expert.gif){:width="45%"}
+![not found](/assets/expert.png){:width="30%"}
+![not found](/assets/expert.gif){:width="35%"}
 {:refdef}
 {:refdef: style="text-align:center;"}
-![not found](/assets/noisy.png){:width="45%"}
-![not found](/assets/noisy.gif){:width="45%"}
+![not found](/assets/noisy.png){:width="30%"}
+![not found](/assets/noisy.gif){:width="35%"}
 {:refdef}
 
 We therefore implement empirical measures to characterise datasets, which correspond to theoretical measures we base on the explorativeness and exploitativeness of the behavioural policy that sampled the dataset.
 
-## Dataset measures
+# Dataset Measures
+
+## Measure of Exploitation
 
 We start with a measure of **exploitation** of the behavioral policy.
 The expected return of a policy directly reflects how well the policy can exploit the reward function of the environment. 
 The expected return is given by
 
-$$g_\pi = \mathbb{E}_\pi \left[sum_{t=0}^T \gamma^t R_{t+1} \right].$$
+$$g_\pi = \mathbb{E}_\pi \left[ \sum_{t=0}^T \gamma^t R_{t+1} \right].$$
 
 Empirically, the expected return is estimated through the average return over the trajectories the dataset consists of. The average return is given by
 
@@ -70,7 +72,7 @@ $$\bar g(\mathcal{D}) = \frac{1}{B} \sum_{b=0}^B \sum_{t=0}^{T_b} \gamma^t r_{b,
 
 We normalized the average return with the best and worst behavior observed on a specific environment, which we call trajectory quality (TQ):
 
-$$TQ(\mathcal{D}) := \frac{\bar g(\mathcal{D}) - \bar g(\mathcal{D}_{\text{min})} {\bar g(\mathcal{D}_{\text{max}) - \bar g(\mathcal{D}_{\text{min})}$$
+$$TQ(\mathcal{D}) := \frac{\bar g(\mathcal{D}) - \bar g(\mathcal{D}_{\text{min}})} {\bar g(\mathcal{D}_{\text{max}}) - \bar g(\mathcal{D}_{\text{min}})}$$
 
 In our experimental setup, the minimum return was those of a random policy and the maximum return those of an expert policy trained in the usual online RL setting.
 
@@ -107,13 +109,13 @@ In practice however, state-action pairs that are present in the dataset more tha
 One could simply choose to sample a specific state-action pair more often for the same effect.
 Therefore, we based our empirical measure of exploration on the maximum entropy upper bound of the entropy estimator or rather its exponentiated value.
 
-$$e^{H(\mathcal{D})} \leq u_{s,a)(\mathcal{D})$$
+$$e^{H(\mathcal{D})} \leq u_{s,a}(\mathcal{D})$$
 
 This upper bound is the number of unique state-action pairs in the dataset.
 As for the trajectory quality, we normalise the number of unique state-action pairs of a given dataset with those of a reference dataset.
 We call this measure the state-action coverage (SACo) of the dataset:
 
-$$SACo(\mathcal{D} := \frac{ u_{s,a)(\mathcal{D})}{ u_{s,a)(\mathcal{D_{\text{ref}})}
+$$SACo(\mathcal{D}) := \frac{u_{s,a}(\mathcal{D})}{ u_{s,a}(\mathcal{D}_{\text{ref}})}$$
 
 ## Dataset generation
 
@@ -124,7 +126,7 @@ Our datasets are generated using the following five settings:
 - Random Dataset: A random policy serves as naive baseline for data collection
 - Expert Dataset: Best policy found during online training used greedy for sampling
 - Mixed Dataset: Mixture of random dataset (80%) and expert dataset (20%)
-- Noisy Dataset: Best policy found during online training used $\eps$-greedy for sampling
+- Noisy Dataset: Best policy found during online training used $\epsilon$-greedy for sampling
 - Replay Dataset: Collection of all samples generated by online policy during training
 
 A visualisation of the behaviour contained for different datasets collected in the environment [MountainCar-v0][mountaincar] is given below. 
