@@ -6,14 +6,14 @@ date:   2022-07-25 12:00:00 +0200
 usemathjax: true
 ---
 
-This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). This is a **5-10 min** read.
+This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). This post is a 5-10 min read.
 
 The main contributions of this work are aligned along the question, **how algorithms in Offline Reinforcement Learning are influenced by the characteristics of the dataset in finding a good policy**. Those are:
 - Deriving theoretical measures that capture exploration and exploitation under a policy
 - Providing an effective method to characterise datasets through the empirical measures TQ and SACo
 - Conducting an extensive empirical evaluation on how dataset characteristics influence popular algorithms in Offline Reinforcement Learning
 
-# Introduction
+## Introduction
 
 The application of Reinforcement Learning (RL) in real world environments can be expensive or risky due to suboptimal policies during training.
 This may endanger humans through accidents inflicted by self-driving cars, crashes of production machines when optimising production processes, or high financial losses when applied in trading or pricing. 
@@ -25,10 +25,10 @@ Offline RL suffers from domain shifts between the training data distribution and
 Based on model-free off-policy algorithms, in particular DQN [(Mnih et al., 2013)][mnih_dqn], algorithmic advances such as policy constraints [(Fujimoto et al., 2019a][fujimoto_bcq_c],[b][fujimoto_bcq_d]; [Wang et al., 2020)][wang_crr] or regularisation of learned action-values [(Kumar et al., 2020)][kumar_cql] have been proposed among others to cope with this issue. 
 
 {:refdef: style="text-align:center;"}
-![not found](/assets/overview_offpolicy_offline.svg){:width="100%"}
+![not found](/assets/overview_offpolicy_offline.svg){:width="80%"}
 {:refdef}
 
-# Datasets in Offline RL
+## Datasets in Offline RL
 
 While unified datasets have been released [(Gulcehre et al., 2020,][gulcehre_rlu] [Fu et al., 2021)][fu_d4rl] for comparisons of Offline RL algorithms, grounded work on understanding how dataset characteristics influence the performance of algorithms is still lacking [(Riedmiller et al., 2021)][riedmiller]. 
 The composition of the dataset not only limits the possible performance of any algorithm applied to it, its characteristics also have a large influence on the optimal hyperparameters of the algorithm. 
@@ -56,11 +56,11 @@ While different behaviour can usually be judged and distinguished if displayed t
 
 We therefore implement empirical measures to characterise datasets, which correspond to theoretical measures we base on the explorativeness and exploitativeness of the behavioural policy that sampled the dataset.
 
-# Dataset Measures
+## Dataset Measures
 
-## Measure of Exploitation
+### Measure of Exploitation
 
-We start with a measure of **exploitation** of the behavioral policy.
+We start with a measure of exploitation of the behavioral policy.
 The expected return of a policy directly reflects how well the policy can exploit the reward function of the environment. 
 The expected return is given by
 
@@ -76,9 +76,9 @@ $$TQ(\mathcal{D}) := \frac{\bar g(\mathcal{D}) - \bar g(\mathcal{D}_{\text{min}}
 
 In our experimental setup, the minimum return was those of a random policy and the maximum return those of an expert policy trained in the usual online RL setting.
 
+### Measure of Exploration
 
-
-Defining a measure for **exploration** is much harder, as there are many ways to define exploration.
+Defining a measure for exploration is much harder, as there are many ways to define exploration.
 Exploration generally serves a purpose, such as acquiring information about the environment dynamics or sampling trajectories that are maximally distant under some distance measure, to name some.
 
 A priori, we do not know the utility of observed transitions to such purposes, which is why we turned to the information theoretic approach of analyzing the Shannon entropy of the transition probabilities under the policy. This transition-entropy is defined as
@@ -87,7 +87,7 @@ $$ H(p_\pi(s,a,r,s’)) := - \sum_{s,a,r,s’} p_\pi(s,a,r,s’) \log( p_\pi(s,a
 
 The transition-entropy can be rewritten into two terms, where the left one is the occupancy weighted entropy of the transition dynamics and the right term the occupancy-entropy:
 
-$$ H(p_\pi(s,a,r,s’)) = \sum_{s,a} \rho_\pi(s,a) H(p(r,s’ \mid s,a)) + H(\rho_\pi(s,a))$$
+$$ H(p_\pi(s,a,r,s’)) = \sum_{s,a} \rho_\pi(s,a) \; H(p(r,s’ \mid s,a)) + H(\rho_\pi(s,a))$$
 
 For deterministic MDPs, which we conducted our experimental analysis on, the left term vanishes and the transition entropy simplifies to the occupancy-entropy.
 
@@ -104,12 +104,12 @@ This would result in a close to uniform occupancy distribution.
 ![not found](/assets/occupancy_noindex.svg){:width="100%"}
 {:refdef}
 
-Empirically, we can estimate the occupancy entropy by the naïve entropy estimator $\hat H(\mathcal{D})$.
+Empirically, we can estimate the occupancy entropy by the naïve entropy estimator $$\hat H(\mathcal{D})$$.
 In practice however, state-action pairs that are present in the dataset more than once do not add extra value to the learning algorithm in a deterministic environment.
 One could simply choose to sample a specific state-action pair more often for the same effect.
 Therefore, we based our empirical measure of exploration on the maximum entropy upper bound of the entropy estimator or rather its exponentiated value.
 
-$$e^{H(\mathcal{D})} \leq u_{s,a}(\mathcal{D})$$
+$$e^{\hat H(\mathcal{D})} \leq u_{s,a}(\mathcal{D})$$
 
 This upper bound is the number of unique state-action pairs in the dataset.
 As for the trajectory quality, we normalise the number of unique state-action pairs of a given dataset with those of a reference dataset.
@@ -123,11 +123,11 @@ In the offline RL literature, dataset generation is neither harmonised, nor thor
 We therefore try to systematically cover and extend prior settings from the literature, especially those used in the released collections of datasets  [(Gulcehre et al., 2020,][gulcehre_rlu] [Fu et al., 2021)][fu_d4rl]. 
 Our datasets are generated using the following five settings:
 
-- Random Dataset: A random policy serves as naive baseline for data collection
-- Expert Dataset: Best policy found during online training used greedy for sampling
-- Mixed Dataset: Mixture of random dataset (80%) and expert dataset (20%)
-- Noisy Dataset: Best policy found during online training used $\epsilon$-greedy for sampling
-- Replay Dataset: Collection of all samples generated by online policy during training
+- **Random Dataset**: A random policy serves as naive baseline for data collection
+- **Expert Dataset**: Best policy found during online training used greedy for sampling
+- **Mixed Dataset**: Mixture of random dataset (80%) and expert dataset (20%)
+- **Noisy Dataset**: Best policy found during online training used $$\epsilon$$-greedy for sampling
+- **Replay Dataset**: Collection of all samples generated by online policy during training
 
 A visualisation of the behaviour contained for different datasets collected in the environment [MountainCar-v0][mountaincar] is given below. 
 This environment has a two dimensional state space, making it straightforward to visualise. 
@@ -174,6 +174,7 @@ Our study thus provides a blueprint to characterise Offline RL datasets and unde
 ## Additional Material
 
 Code on Github: [OfflineRL][github-repo]
+
 Paper: [A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper]
 
 This blogpost was written by Kajetan Schweighofer with contributions by …
