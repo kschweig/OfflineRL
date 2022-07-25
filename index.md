@@ -6,7 +6,7 @@ date:   2022-07-25 12:00:00 +0200
 usemathjax: true
 ---
 
-This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). This post is a 5-10 min read.
+This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). 5-10 min read.
 
 The main contributions of this work are aligned along the question, **how algorithms in Offline Reinforcement Learning are influenced by the characteristics of the dataset in finding a good policy**. Those are:
 - Deriving theoretical measures that capture exploration and exploitation under a policy
@@ -25,7 +25,7 @@ Offline RL suffers from domain shifts between the training data distribution and
 Based on model-free off-policy algorithms, in particular DQN [(Mnih et al., 2013)][mnih_dqn], algorithmic advances such as policy constraints [(Fujimoto et al., 2019a][fujimoto_bcq_c],[b][fujimoto_bcq_d]; [Wang et al., 2020)][wang_crr] or regularisation of learned action-values [(Kumar et al., 2020)][kumar_cql] have been proposed among others to cope with this issue. 
 
 {:refdef: style="text-align:center;"}
-![not found](/assets/overview_offpolicy_offline.svg){:width="80%"}
+![not found](/assets/overview_offpolicy_offline.svg){:width="70%"}
 {:refdef}
 
 ## Datasets in Offline RL
@@ -89,6 +89,7 @@ The transition-entropy can be rewritten into two terms, where the left one is th
 
 $$ H(p_\pi(s,a,r,s’)) = \sum_{s,a} \rho_\pi(s,a) \; H(p(r,s’ \mid s,a)) + H(\rho_\pi(s,a))$$
 
+The occupancy denotes the probability of being in a certain state-action pair under the policy.
 For deterministic MDPs, which we conducted our experimental analysis on, the left term vanishes and the transition entropy simplifies to the occupancy-entropy.
 
 The following figure provides an intuition about how the occupancy-entropy is related to exploration.
