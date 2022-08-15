@@ -6,6 +6,7 @@ usemathjax: true
 
 This blog post explains the paper "[A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper] (presented at [CoLLAs 2022][collas]). 5-10 min read.
 
+
 The main contributions of this work are aligned along the question, **how algorithms in Offline Reinforcement Learning are influenced by the characteristics of the dataset in finding a good policy**. Those are:
 - Deriving theoretical measures that capture exploration and exploitation under a policy
 - Providing an effective method to characterise datasets through the empirical measures TQ and SACo
@@ -72,7 +73,7 @@ We normalized the average return with the best and worst behavior observed on a 
 
 $$TQ(\mathcal{D}) := \frac{\bar g(\mathcal{D}) - \bar g(\mathcal{D}_{\text{min}})} {\bar g(\mathcal{D}_{\text{max}}) - \bar g(\mathcal{D}_{\text{min}})}$$
 
-In our experimental setup, the minimum return was those of a random policy and the maximum return those of an expert policy trained in the usual online RL setting.
+In our experimental setup, the minimum return was chosen to be represented by the random policy and the maximum return by an expert policy trained in the usual online RL setting.
 
 ### Measure of Exploration
 
@@ -89,6 +90,8 @@ $$ H(p_\pi(s,a,r,s’)) = \sum_{s,a} \rho_\pi(s,a) \; H(p(r,s’ \mid s,a)) + H(
 
 The occupancy denotes the probability of being in a certain state-action pair under the policy.
 For deterministic MDPs, which we conducted our experimental analysis on, the left term vanishes and the transition entropy simplifies to the occupancy-entropy.
+
+$$ H(\rho_\pi(s,a)) := - \sum_{s,a} \rho_\pi(s,a) \log( \rho_\pi(s,a) ).$$
 
 The following figure provides an intuition about how the occupancy-entropy is related to exploration.
 The two illustrations on the right show the state-occupancy for a random and a noisy expert policy in a gridworld.
@@ -176,7 +179,11 @@ Code on Github: [OfflineRL][github-repo]
 
 Paper: [A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper]
 
-This blogpost was written by Kajetan Schweighofer with contributions by …
+Poster: [CoLLAs Poster][poster]
+
+Slides: [CoLLAs Slides][slides]
+
+This blogpost was written by Kajetan Schweighofer with contributions by Andreas Radler and Marius-Constantin Dinu
 
 If there are any questions, feel free to contact us: schweighofer[at]ml.jku.at
 
@@ -185,6 +192,8 @@ If there are any questions, feel free to contact us: schweighofer[at]ml.jku.at
 [arxiv-paper]: https://arxiv.org/abs/2111.04714
 [github-repo]: https://github.com/ml-jku/OfflineRL
 [collas]: https://lifelong-ml.cc/
+[poster]: https://github.com/kschweig/OfflineRL/tree/gh-pages/pdfs/poster.pdf
+[slides]: https://github.com/kschweig/OfflineRL/tree/gh-pages/pdfs/slides.pdf
 
 [pomerleau_bc]: https://www.ri.cmu.edu/pub_files/pub3/pomerleau_dean_1991_1/pomerleau_dean_1991_1.pdf
 [mnih_dqn]: https://arxiv.org/abs/1312.5602
