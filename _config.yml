@@ -9,3 +9,4 @@ buttons:
   Poster: 'pdfs/poster.pdf'
 kramdown:
   math_engine: mathjax
+theme: jekyll-theme-cayman
