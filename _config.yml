@@ -7,6 +7,5 @@ buttons:
   Code: 'https://github.com/ml-jku/OfflineRL'
   Slides: 'pdfs/slides.pdf'
   Poster: 'pdfs/poster.pdf'
-theme: jekyll-theme-cayman
 kramdown:
   math_engine: mathjax
