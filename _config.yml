@@ -1,3 +1,11 @@
 theme: jekyll-theme-cayman
 kramdown:
   math_engine: mathjax
+title: A Dataset Perspective on Offline Reinforcement Learning
+description:
+- NeurIPS 2019 Deep RL Workshop (Contributed Talk). An earlier version was titled "Striving for Simplicity in Off-Policy Deep Reinforcement Learning". 
+buttons:
+  Paper: 'https://arxiv.org/abs/2111.04714'
+  Code: 'https://github.com/ml-jku/OfflineRL'
+  Slides: 'pdfs/slides.pdf'
+  Poster: 'pdfs/poster.pdf'
