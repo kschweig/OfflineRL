@@ -1,4 +1,4 @@
-theme: jekyll-theme-cayman
+intro:
 title: A Dataset Perspective on Offline Reinforcement Learning
 description:
 - Conference on Lifelong Learning Agents 2022 (Oral)
@@ -7,5 +7,6 @@ buttons:
   Code: 'https://github.com/ml-jku/OfflineRL'
   Slides: 'pdfs/slides.pdf'
   Poster: 'pdfs/poster.pdf'
+theme: jekyll-theme-cayman
 kramdown:
   math_engine: mathjax
