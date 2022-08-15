@@ -1,7 +1,6 @@
 ---
 layout: default
 title:  "A Dataset Perspective on Offline Reinforcement Learning"
-description: Blog post
 date:   2022-07-25 12:00:00 +0200
 usemathjax: true
 ---
