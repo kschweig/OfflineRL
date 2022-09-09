@@ -179,6 +179,8 @@ Code on Github: [OfflineRL][github-repo]
 
 Paper: [A Dataset Perspective on Offline Reinforcement Learning][arxiv-paper]
 
+Prerecorded Conference Talk: [CoLLAs Talk][talk]
+
 Poster: [CoLLAs Poster][poster]
 
 Slides: [CoLLAs Slides][slides]
@@ -192,6 +194,7 @@ If there are any questions, feel free to contact us: schweighofer[at]ml.jku.at
 [arxiv-paper]: https://arxiv.org/abs/2111.04714
 [github-repo]: https://github.com/ml-jku/OfflineRL
 [collas]: https://lifelong-ml.cc/
+[talk]: https://youtu.be/gYOieDpvhew
 [poster]: https://github.com/kschweig/OfflineRL/tree/gh-pages/pdfs/poster.pdf
 [slides]: https://github.com/kschweig/OfflineRL/tree/gh-pages/pdfs/slides.pdf
 
