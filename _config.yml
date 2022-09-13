@@ -10,3 +10,5 @@ buttons:
 kramdown:
   math_engine: mathjax
 theme: jekyll-theme-cayman
+
+google_analytics: G-D8TNX1TGTY
