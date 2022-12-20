@@ -17,15 +17,16 @@ Sepp Hochreiter<sup>1,2</sup>_
 
 The paper is available on [arxiv](https://arxiv.org/abs/2111.04714) and got accepted to [CoLLAs 2022](https://lifelong-ml.cc/).
 
-While the conference proceedings do not yet exist, we recommend the following citation:
+We recommend the following citation:
 
 ```
-@misc{schweighofer2022dataset,
-	title={A Dataset Perspective on Offline Reinforcement Learning},
-	author={Schweighofer, Kajetan and Radler, Andreas and Dinu, Marius-Constantin and Hofmarcher, Markus and Patil, Vihang and Bitto-Nemling, Angela and Eghbal-zadeh, Hamid and Hochreiter, Sepp},
-	journal={arXiv preprint, accepted to First Conference on Lifelong Learning Agents 2022},
-	year={2022},
-	eprint={arXiv:2111.04714}
+@inproceedings{schweighofer2022dataset,
+  title={A Dataset Perspective on Offline Reinforcement Learning},
+  author={Schweighofer, Kajetan and Radler, Andreas and Dinu, Marius-Constantin and Hofmarcher, Markus and Patil, Vihang Prakash and Bitto-Nemling, Angela and Eghbal-zadeh, Hamid and Hochreiter, Sepp},
+  booktitle={Conference on Lifelong Learning Agents},
+  pages={470--517},
+  year={2022},
+  organization={PMLR}
 }
 ```
 
